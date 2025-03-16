@@ -1,4 +1,4 @@
-// grading-us.js (version v17 - Grading Logic with Word Count, Post Count, and Due Date)
+// grading-us.js (version v18 - Condensed Feedback + Criteria Summary)
 (function() {
   const url = window.location.href;
   const courseMatch = url.match(/courses\/(\d+)/);
@@ -14,7 +14,6 @@
     return;
   }
 
-  // Create sidebar container for displaying posts and grade feedback
   const sidebar = document.createElement("div");
   sidebar.style.position = "fixed";
   sidebar.style.top = "0";
@@ -33,54 +32,47 @@
   title.textContent = "Canvas Grading Tool";
   sidebar.appendChild(title);
 
-  // Container to display posts
   const status = document.createElement("div");
   status.textContent = "Loading posts...";
   sidebar.appendChild(status);
 
-  // Container for grade and feedback comment
   const gradeDiv = document.createElement("div");
   gradeDiv.style.marginTop = "20px";
   sidebar.appendChild(gradeDiv);
 
-  // Version footer for confirmation
   const versionFooter = document.createElement("div");
   versionFooter.style.marginTop = "20px";
   versionFooter.style.fontSize = "0.8em";
   versionFooter.style.color = "#666";
-  versionFooter.textContent = "Version: v17";
+  versionFooter.textContent = "Version: v18";
   sidebar.appendChild(versionFooter);
 
   document.body.appendChild(sidebar);
 
-  // Word count function:
-  // Remove HTML tags, normalize quotes, hyphens, punctuation, and collapse spaces,
-  // then count words by splitting on spaces.
   function countWordsSmart(text) {
     if (!text) return 0;
     const plainText = text
-      .replace(/<[^>]*>/g, '')                   // remove HTML tags
-      .replace(/[\u2018\u2019\u201C\u201D]/g, "'") // normalize curly quotes
-      .replace(/[-']/g, '')                      // remove hyphens and apostrophes
-      .replace(/[^\w\s]/g, '')                    // remove punctuation\n      .replace(/\s+/g, ' ')                      // collapse whitespace\n      .trim();
+      .replace(/<[^>]*>/g, '')
+      .replace(/[\u2018\u2019\u201C\u201D]/g, "'")
+      .replace(/[-']/g, '')
+      .replace(/[^\w\s]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
     return plainText ? plainText.split(' ').length : 0;
   }
 
-  // Fetch assignment data (which includes discussion_topic and due_at)
   async function fetchAssignmentData() {
     const res = await fetch(`/api/v1/courses/${courseId}/assignments/${assignmentId}`);
     if (!res.ok) throw new Error("Assignment lookup failed");
     return res.json();
   }
 
-  // Fetch discussion posts using the discussion ID
   async function fetchDiscussionPosts(discussionId) {
     const res = await fetch(`/api/v1/courses/${courseId}/discussion_topics/${discussionId}/view`);
     if (!res.ok) throw new Error("Discussion lookup failed");
     return res.json();
   }
 
-  // Recursively flatten posts (including replies)
   function flattenPosts(posts) {
     let flat = [];
     function recurse(list) {
@@ -97,17 +89,13 @@
 
   async function loadPostsAndGrade() {
     try {
-      // Get assignment data (to obtain due date and discussion topic)
       const assignmentData = await fetchAssignmentData();
-      const dueAt = assignmentData.due_at; // may be null if not set
+      const dueAt = assignmentData.due_at;
       const discussionId = assignmentData.discussion_topic ? assignmentData.discussion_topic.id : null;
       if (!discussionId) throw new Error("Failed to identify discussion ID");
 
-      // Fetch discussion posts data
       const discussionData = await fetchDiscussionPosts(discussionId);
-      // Flatten all posts (view and nested replies)
       const allEntries = flattenPosts([...discussionData.view, ...(discussionData.replies || [])]);
-      // Filter entries to those submitted by the student (using student_id)
       const studentPosts = allEntries.filter(entry =>
         String(entry.user_id) === String(studentId) && entry.message && entry.message.trim()
       );
@@ -117,30 +105,22 @@
         return;
       }
 
-      // Sort posts chronologically by created_at
       studentPosts.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
       const initialPost = studentPosts[0];
       const initialWordCount = countWordsSmart(initialPost.message);
       const numPosts = studentPosts.length;
 
-      // Grading logic:
-      // Base score is 10.
       let score = 10;
       let deductionDetails = [];
 
-      // 1) Word count deduction (if initial post is not between 100 and 165 words)
       if (initialWordCount < 100 || initialWordCount > 165) {
         score -= 2;
-        deductionDetails.push("Word count not within 100-165 (-2)");
+        deductionDetails.push("Word count not within 100–165 (-2)");
       }
-
-      // 2) Post count deduction (if only one post)
       if (numPosts < 2) {
         score -= 4;
         deductionDetails.push("Only one post (-4)");
       }
-
-      // 3) Due date deduction (if initial post was submitted after the due date)
       if (dueAt) {
         const dueDate = new Date(dueAt);
         const initialPostDate = new Date(initialPost.created_at);
@@ -149,39 +129,34 @@
           deductionDetails.push("Posted after due date (-5)");
         }
       }
-
-      // Ensure minimum score is 2
       if (score < 2) score = 2;
 
-      // Generate feedback comment:
-      let comment = `Your initial post contains ${initialWordCount} words. `;
-      if (initialWordCount >= 100 && initialWordCount <= 165) {
-        comment += "This meets the word count requirement. ";
-      } else {
-        comment += "This does not meet the word count requirement. ";
-      }
-      comment += `You submitted ${numPosts} post${numPosts > 1 ? "s" : ""}. `;
-      if (deductionDetails.length > 0) {
-        comment += "Deductions: " + deductionDetails.join(", ") + ". ";
-      } else {
-        comment += "Great job meeting all criteria! ";
-      }
-      comment += `Your final score is ${score}/10.`;
-
-      // Render student posts in the sidebar
-      status.innerHTML = `<h3>Posts by Student:</h3>`;
-      studentPosts.forEach(post => {
+      // Generate summary and comment
+      let summary = `<h3>Post Summary:</h3>`;
+      studentPosts.forEach((post, idx) => {
         const wc = countWordsSmart(post.message);
-        const div = document.createElement("div");
-        div.style.marginBottom = "12px";
-        div.style.padding = "8px";
-        div.style.border = "1px solid #ddd";
-        div.style.background = "#fff";
-        div.innerHTML = `${post.message}<br><b>Word Count: ${wc}</b>`;
-        status.appendChild(div);
+        summary += `<div>Post ${idx + 1} word count: ${wc}</div>`;
       });
-      // Render grade feedback
+
+      // Grading breakdown table
+      let rubric = `<h3>Criteria Breakdown:</h3><table style="border-collapse: collapse; width: 100%;">
+        <tr><th align="left">Criteria</th><th align="left">Result</th></tr>
+        <tr><td>Initial post word count</td><td>${initialWordCount} words</td></tr>
+        <tr><td>Total posts</td><td>${numPosts}</td></tr>
+        <tr><td>Posted on time</td><td>${!dueAt || new Date(initialPost.created_at) <= new Date(dueAt) ? "✔️" : "❌ Late"}</td></tr>
+        <tr><td>Total deductions</td><td>${deductionDetails.length ? deductionDetails.join('; ') : 'None'}</td></tr>
+      </table>`;
+
+      let comment = "Thanks for participating in the discussion! ";
+      if (deductionDetails.length) {
+        comment += deductionDetails.join('. ') + `. Final score: ${score}/10.`;
+      } else {
+        comment += `You met all expectations. Score: ${score}/10.`;
+      }
+
+      status.innerHTML = summary + rubric;
       gradeDiv.innerHTML = `<h3>Grade & Feedback:</h3><p>${comment}</p>`;
+
     } catch (err) {
       status.innerHTML = `<span style='color:red;'>❌ ${err.message}</span>`;
     }
