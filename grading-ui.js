@@ -16,21 +16,25 @@ function extractPostsFromDOM() {
     status.textContent = "Could not determine student name.";
     return;
   }
+
   const studentName = nameEl.textContent.trim();
-
   const entries = iframeDoc.querySelectorAll('.entry');
-  const matchedPosts = [];
 
+  const matchedPosts = [];
   entries.forEach(entry => {
-    const author = entry.querySelector('.author_name');
-    const content = entry.querySelector('.discussion_user_content');
-    if (author && content && author.textContent.trim() === studentName) {
-      matchedPosts.push(content.innerHTML);
+    const authorEl = entry.querySelector('.author_name');
+    const contentEl = entry.querySelector('.discussion_user_content');
+
+    if (authorEl && contentEl) {
+      const authorName = authorEl.textContent.trim();
+      if (authorName === studentName) {
+        matchedPosts.push(contentEl.innerHTML);
+      }
     }
   });
 
   if (matchedPosts.length === 0) {
-    status.textContent = "No discussion posts found for this student.";
+    status.textContent = "No matching posts found for this student.";
     return;
   }
 
