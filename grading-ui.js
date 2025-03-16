@@ -1,4 +1,4 @@
-// index.js (version v8 - Word Count Added)
+// index.js (version v11 - Word Count Added)
 (function() {
   const url = window.location.href;
   const courseMatch = url.match(/courses\/(\d+)/);
