@@ -34,18 +34,26 @@
   title.textContent = "Canvas Grading Tool";
   sidebar.appendChild(title);
 
-  const info = document.createElement("p");
-  info.textContent = `Course: ${courseId}, Assignment: ${assignmentId}, Student: ${studentId}`;
-  sidebar.appendChild(info);
-
   const status = document.createElement("div");
   status.textContent = "Fetching discussion posts...";
   sidebar.appendChild(status);
 
   document.body.appendChild(sidebar);
 
-  // Fetch discussion posts (fallback to safe API GET if needed)
-  const apiUrl = `/api/v1/courses/${courseId}/discussion_topics/${assignmentId}/entries`;
+  // Find the correct discussion ID for this assignment ID using the DOM if available
+  const discussionIdFromDom = (() => {
+    const links = [...document.querySelectorAll("a")];
+    const match = links.find(link => link.href.includes(`/courses/${courseId}/discussion_topics/`) && link.href.includes(`assignments/${assignmentId}`));
+    if (match) {
+      const idMatch = match.href.match(/discussion_topics\/(\d+)/);
+      return idMatch ? idMatch[1] : null;
+    }
+    return null;
+  })();
+
+  const discussionId = discussionIdFromDom || assignmentId;
+
+  const apiUrl = `/api/v1/courses/${courseId}/discussion_topics/${discussionId}/entries?per_page=100`;
 
   fetch(apiUrl)
     .then((res) => {
@@ -66,7 +74,7 @@
         entry.style.padding = "8px";
         entry.style.border = "1px solid #ddd";
         entry.style.background = "#fff";
-        entry.innerHTML = `<strong>${post.user_name}:</strong><br>${post.message}`;
+        entry.innerHTML = `${post.message}`;
         status.appendChild(entry);
       });
     })
