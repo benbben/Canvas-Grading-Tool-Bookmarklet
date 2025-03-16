@@ -1,4 +1,4 @@
-// grading-us.js (version v22 - Docked Right Sidebar Layout)
+// grading-us.js (version v23 - Sidebar Docked with Responsive Panel)
 (function() {
   const url = window.location.href;
   const courseMatch = url.match(/courses\/(\d+)/);
@@ -28,25 +28,10 @@
   sidebar.style.fontFamily = "Arial, sans-serif";
   sidebar.style.whiteSpace = "pre-wrap";
   sidebar.style.boxShadow = "-4px 0 10px rgba(0,0,0,0.1)";
-  sidebar.style.transform = "translateX(0)";
-  sidebar.style.transition = "transform 0.3s ease-in-out";
-
-  const toggleBtn = document.createElement("button");
-  toggleBtn.textContent = "⇋";
-  toggleBtn.title = "Toggle Sidebar";
-  toggleBtn.style.position = "absolute";
-  toggleBtn.style.left = "-30px";
-  toggleBtn.style.top = "10px";
-  toggleBtn.style.width = "30px";
-  toggleBtn.style.height = "30px";
-  toggleBtn.style.cursor = "pointer";
-  sidebar.appendChild(toggleBtn);
-
-  let isCollapsed = false;
-  toggleBtn.onclick = () => {
-    isCollapsed = !isCollapsed;
-    sidebar.style.transform = isCollapsed ? "translateX(100%)" : "translateX(0)";
-  };
+  sidebar.style.resize = "horizontal";
+  sidebar.style.overflow = "auto";
+  sidebar.style.minWidth = "300px";
+  sidebar.style.maxWidth = "80vw";
 
   const title = document.createElement("h2");
   title.textContent = "Canvas Grading Tool";
@@ -73,7 +58,7 @@
   versionFooter.style.marginTop = "20px";
   versionFooter.style.fontSize = "0.8em";
   versionFooter.style.color = "#666";
-  versionFooter.textContent = "Version: v22";
+  versionFooter.textContent = "Version: v23";
   sidebar.appendChild(versionFooter);
 
   document.body.appendChild(sidebar);
@@ -197,11 +182,7 @@
           const body = doc.querySelector("body#tinymce");
           if (body) {
             body.innerHTML = `<p>${comment}</p>`;
-          } else {
-            console.warn("Couldn't find tinymce body in iframe.");
           }
-        } else {
-          console.warn("Couldn't locate the comment iframe.");
         }
       };
     } catch (err) {
