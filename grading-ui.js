@@ -1,88 +1,76 @@
-(async () => {
+// index.js
+
+(function() {
+  const url = window.location.href;
+  const courseMatch = url.match(/courses\/(\d+)/);
+  const assignmentMatch = url.match(/assignment_id=(\d+)/);
+  const studentMatch = url.match(/student_id=(\d+)/);
+
+  const courseId = courseMatch ? courseMatch[1] : null;
+  const assignmentId = assignmentMatch ? assignmentMatch[1] : null;
+  const studentId = studentMatch ? studentMatch[1] : null;
+
+  if (!courseId || !assignmentId || !studentId) {
+    alert("This tool must be used within the Canvas SpeedGrader page.");
+    return;
+  }
+
+  // Create sidebar container
   const sidebar = document.createElement("div");
   sidebar.style.position = "fixed";
   sidebar.style.top = "0";
   sidebar.style.right = "0";
   sidebar.style.width = "400px";
-  sidebar.style.height = "100vh";
-  sidebar.style.backgroundColor = "white";
+  sidebar.style.height = "100%";
+  sidebar.style.background = "#f9f9f9";
   sidebar.style.borderLeft = "2px solid #ccc";
   sidebar.style.zIndex = "9999";
   sidebar.style.overflowY = "auto";
   sidebar.style.padding = "16px";
   sidebar.style.fontFamily = "Arial, sans-serif";
-  sidebar.style.whiteSpace = "pre-wrap"; // ensures text wraps
-  document.body.appendChild(sidebar);
+  sidebar.style.whiteSpace = "pre-wrap";
 
-  const header = document.createElement("h2");
-  header.textContent = "Canvas Grading Tool";
-  sidebar.appendChild(header);
+  const title = document.createElement("h2");
+  title.textContent = "Canvas Grading Tool";
+  sidebar.appendChild(title);
 
-  // Extract course_id, assignment_id, student_id from URL
-  const urlParams = new URLSearchParams(window.location.search);
-  const courseId = window.location.pathname.split("/")[2];
-  const assignmentId = urlParams.get("assignment_id");
-  const studentId = urlParams.get("student_id");
-
-  const info = document.createElement("div");
-  info.innerHTML = `
-    <p><strong>Course ID:</strong> ${courseId}</p>
-    <p><strong>Assignment ID:</strong> ${assignmentId}</p>
-    <p><strong>Student ID:</strong> ${studentId}</p>
-    <button id="fetchBtn">Load Posts</button>
-  `;
+  const info = document.createElement("p");
+  info.textContent = `Course: ${courseId}, Assignment: ${assignmentId}, Student: ${studentId}`;
   sidebar.appendChild(info);
 
-  const results = document.createElement("div");
-  results.id = "results";
-  results.style.marginTop = "20px";
-  sidebar.appendChild(results);
+  const status = document.createElement("div");
+  status.textContent = "Fetching discussion posts...";
+  sidebar.appendChild(status);
 
-  document.getElementById("fetchBtn").addEventListener("click", async () => {
-    results.innerHTML = "<p><em>Loading...</em></p>";
-    try {
-      // Fetch all discussion topics for this course
-      const topicsRes = await fetch(
-        `https://${window.location.hostname}/api/v1/courses/${courseId}/discussion_topics?per_page=100`,
-        { credentials: "include" }
-      );
-      const topics = await topicsRes.json();
+  document.body.appendChild(sidebar);
 
-      // Try to find the matching discussion topic by assignment_id
-      const matchingTopic = topics.find(
-        (topic) => topic.assignment_id && topic.assignment_id.toString() === assignmentId
-      );
+  // Fetch discussion posts (fallback to safe API GET if needed)
+  const apiUrl = `/api/v1/courses/${courseId}/discussion_topics/${assignmentId}/entries`;
 
-      if (!matchingTopic) {
-        results.innerHTML = "<p><strong>No matching discussion found for this assignment.</strong></p>";
+  fetch(apiUrl)
+    .then((res) => {
+      if (!res.ok) throw new Error("Network response was not ok");
+      return res.json();
+    })
+    .then((data) => {
+      const posts = data.filter(post => `${post.user_id}` === studentId);
+      if (posts.length === 0) {
+        status.textContent = "No valid posts found for this student.";
         return;
       }
 
-      const discussionId = matchingTopic.id;
-
-      // Fetch entries for that discussion
-      const entriesRes = await fetch(
-        `https://${window.location.hostname}/api/v1/courses/${courseId}/discussion_topics/${discussionId}/entries?per_page=100`,
-        { credentials: "include" }
-      );
-      const entries = await entriesRes.json();
-
-      const studentEntries = entries.filter((entry) => entry.user_id.toString() === studentId);
-
-      if (studentEntries.length === 0) {
-        results.innerHTML = "<p><strong>No valid posts found for this student.</strong></p>";
-        return;
-      }
-
-      results.innerHTML = "<h3>Student Posts:</h3>";
-      studentEntries.forEach((entry, i) => {
-        const postDiv = document.createElement("div");
-        postDiv.style.marginBottom = "16px";
-        postDiv.innerHTML = `<strong>Post ${i + 1}:</strong><br>${entry.message}`;
-        results.appendChild(postDiv);
+      status.innerHTML = "<h3>Posts:</h3>";
+      posts.forEach(post => {
+        const entry = document.createElement("div");
+        entry.style.marginBottom = "12px";
+        entry.style.padding = "8px";
+        entry.style.border = "1px solid #ddd";
+        entry.style.background = "#fff";
+        entry.innerHTML = `<strong>${post.user_name}:</strong><br>${post.message}`;
+        status.appendChild(entry);
       });
-    } catch (error) {
-      results.innerHTML = `<p><strong>Error:</strong> ${error.message}</p>`;
-    }
-  });
+    })
+    .catch((err) => {
+      status.textContent = `Error fetching posts: ${err.message}`;
+    });
 })();
