@@ -1,4 +1,4 @@
-// grading-us.js (version v15 - Smart Word Count + Timestamp Sort)
+// grading-us.js (version v16 - Strip Apostrophes & Hyphens for Word Count)
 (function() {
   const url = window.location.href;
   const courseMatch = url.match(/courses\/(\d+)/);
@@ -40,7 +40,7 @@
   versionFooter.style.marginTop = "20px";
   versionFooter.style.fontSize = "0.8em";
   versionFooter.style.color = "#666";
-  versionFooter.textContent = "Version: v15";
+  versionFooter.textContent = "Version: v16";
   sidebar.appendChild(versionFooter);
 
   document.body.appendChild(sidebar);
@@ -59,21 +59,16 @@
   }
 
   function countWordsSmart(text) {
-  if (!text) return 0;
-
-  // Use Intl.Segmenter for high-accuracy where available
-  if (typeof Intl !== "undefined" && Intl.Segmenter) {
-    const segmenter = new Intl.Segmenter("en", { granularity: "word" });
-    return Array.from(segmenter.segment(text)).filter(seg =>
-      seg.isWordLike && /^[a-zA-Z0-9]/.test(seg.segment)
-    ).length;
+    if (!text) return 0;
+    const cleaned = text
+      .replace(/<[^>]*>/g, '')
+      .replace(/[’‘]/g, "'")
+      .replace(/[-']/g, '')
+      .replace(/[^\w\s]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+    return cleaned ? cleaned.split(' ').length : 0;
   }
-
-  // Fallback: Match typical words (contractions/hyphenated allowed)
-  const matches = text.match(/\b[a-zA-Z0-9]+(?:['-][a-zA-Z0-9]+)?\b/g) || [];
-  return matches.length;
-}
-
 
   function renderPosts(entries) {
     const filtered = entries.filter(entry =>
