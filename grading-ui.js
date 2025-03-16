@@ -1,76 +1,49 @@
-// index.js (DOM-only version)
-(function() {
-  const url = window.location.href;
-  const courseMatch = url.match(/courses\/(\d+)/);
-  const assignmentMatch = url.match(/assignment_id=(\d+)/);
-  const studentMatch = url.match(/student_id=(\d+)/);
-
-  const courseId = courseMatch ? courseMatch[1] : null;
-  const assignmentId = assignmentMatch ? assignmentMatch[1] : null;
-  const studentId = studentMatch ? studentMatch[1] : null;
-
-  if (!courseId || !assignmentId || !studentId) {
-    alert("This tool must be used within the Canvas SpeedGrader page.");
+function extractPostsFromDOM() {
+  const frame = document.querySelector('iframe#speedgrader_iframe');
+  if (!frame) {
+    status.textContent = "Could not locate SpeedGrader iframe.";
     return;
   }
 
-  // Create sidebar container
-  const sidebar = document.createElement("div");
-  sidebar.style.position = "fixed";
-  sidebar.style.top = "0";
-  sidebar.style.right = "0";
-  sidebar.style.width = "400px";
-  sidebar.style.height = "100%";
-  sidebar.style.background = "#f9f9f9";
-  sidebar.style.borderLeft = "2px solid #ccc";
-  sidebar.style.zIndex = "9999";
-  sidebar.style.overflowY = "auto";
-  sidebar.style.padding = "16px";
-  sidebar.style.fontFamily = "Arial, sans-serif";
-  sidebar.style.whiteSpace = "pre-wrap";
-
-  const title = document.createElement("h2");
-  title.textContent = "Canvas Grading Tool";
-  sidebar.appendChild(title);
-
-  const status = document.createElement("div");
-  status.textContent = "Searching for student posts...";
-  sidebar.appendChild(status);
-
-  document.body.appendChild(sidebar);
-
-  // Extract visible posts in SpeedGrader
-  function extractPostsFromDOM() {
-    const frame = document.querySelector('iframe#speedgrader_iframe');
-    if (!frame) {
-      status.textContent = "Could not locate SpeedGrader iframe.";
-      return;
-    }
-
-    const iframeDoc = frame.contentDocument || frame.contentWindow.document;
-    if (!iframeDoc) {
-      status.textContent = "Unable to access iframe content.";
-      return;
-    }
-
-    const posts = iframeDoc.querySelectorAll('.discussion_user_content');
-    if (!posts || posts.length === 0) {
-      status.textContent = "No discussion content found in iframe.";
-      return;
-    }
-
-    status.innerHTML = "<h3>Student Posts:</h3>";
-    posts.forEach(post => {
-      const entry = document.createElement("div");
-      entry.style.marginBottom = "12px";
-      entry.style.padding = "8px";
-      entry.style.border = "1px solid #ddd";
-      entry.style.background = "#fff";
-      entry.innerHTML = post.innerHTML;
-      status.appendChild(entry);
-    });
+  const iframeDoc = frame.contentDocument || frame.contentWindow.document;
+  if (!iframeDoc) {
+    status.textContent = "Unable to access iframe content.";
+    return;
   }
 
-  // Give iframe time to load
-  setTimeout(extractPostsFromDOM, 1500);
-})();
+  // Grab the current student's name from the SpeedGrader header
+  const nameEl = document.querySelector('#student_select_menu .display_name');
+  if (!nameEl) {
+    status.textContent = "Could not determine student name.";
+    return;
+  }
+  const studentName = nameEl.textContent.trim();
+
+  // Find all visible posts with matching author name
+  const entries = iframeDoc.querySelectorAll('.entry');
+  const studentPosts = [];
+
+  entries.forEach(entry => {
+    const author = entry.querySelector('.author_name');
+    if (author && author.textContent.trim() === studentName) {
+      const content = entry.querySelector('.discussion_user_content');
+      if (content) studentPosts.push(content.innerHTML);
+    }
+  });
+
+  if (studentPosts.length === 0) {
+    status.textContent = "No posts found for current student.";
+    return;
+  }
+
+  status.innerHTML = "<h3>Student Posts:</h3>";
+  studentPosts.forEach(html => {
+    const postBox = document.createElement("div");
+    postBox.style.marginBottom = "12px";
+    postBox.style.padding = "8px";
+    postBox.style.border = "1px solid #ddd";
+    postBox.style.background = "#fff";
+    postBox.innerHTML = html;
+    status.appendChild(postBox);
+  });
+}
