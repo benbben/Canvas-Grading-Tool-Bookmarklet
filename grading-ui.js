@@ -1,5 +1,5 @@
-// grading-ui.js v1.7
-(function () {
+// index.js (DOM-only version v4)
+(function() {
   const url = window.location.href;
   const courseMatch = url.match(/courses\/(\d+)/);
   const assignmentMatch = url.match(/assignment_id=(\d+)/);
@@ -14,7 +14,7 @@
     return;
   }
 
-  // Sidebar UI setup
+  // Create sidebar container
   const sidebar = document.createElement("div");
   sidebar.style.position = "fixed";
   sidebar.style.top = "0";
@@ -34,88 +34,71 @@
   sidebar.appendChild(title);
 
   const status = document.createElement("div");
-  status.style.marginBottom = "12px";
-  status.textContent = "Detecting student...";
+  status.textContent = "Searching for student posts...";
   sidebar.appendChild(status);
 
-  const postsContainer = document.createElement("div");
-  postsContainer.innerHTML = "<strong>Loading posts...</strong>";
-  sidebar.appendChild(postsContainer);
-
   const versionFooter = document.createElement("div");
-  versionFooter.style.marginTop = "24px";
-  versionFooter.style.fontSize = "12px";
-  versionFooter.style.color = "#999";
-  versionFooter.textContent = "Version 1.7";
+  versionFooter.style.marginTop = "20px";
+  versionFooter.style.fontSize = "0.8em";
+  versionFooter.style.color = "#666";
+  versionFooter.textContent = "Version: v4";
   sidebar.appendChild(versionFooter);
 
   document.body.appendChild(sidebar);
 
-  function getStudentNameFallback() {
-    const nameDropdown = document.querySelector("#student_select_menu");
-    if (nameDropdown) {
-      const selectedOption = nameDropdown.querySelector("option[selected]");
-      if (selectedOption) return selectedOption.textContent.trim();
-    }
-    return null;
+  function extractStudentNameFromDropdown() {
+    const nameEl = document.querySelector(".ui-selectmenu-item-header");
+    return nameEl ? nameEl.innerText.trim() : null;
   }
 
-  function extractPostsFromDOM(studentName) {
-    const frame = document.querySelector("iframe#speedgrader_iframe");
+  function extractPostsFromDOM() {
+    const frame = document.querySelector('iframe#speedgrader_iframe');
     if (!frame) {
-      postsContainer.innerHTML = "❌ Could not locate SpeedGrader iframe.";
+      status.innerHTML = '<span style="color: red;">❌ Could not locate SpeedGrader iframe.</span>';
       return;
     }
 
     const iframeDoc = frame.contentDocument || frame.contentWindow.document;
     if (!iframeDoc) {
-      postsContainer.innerHTML = "❌ Unable to access iframe content.";
+      status.innerHTML = '<span style="color: red;">❌ Unable to access iframe content.</span>';
       return;
     }
 
-    const allPosts = iframeDoc.querySelectorAll(".discussion_user_content");
-    const nameEls = iframeDoc.querySelectorAll(".author_name");
-
-    if (allPosts.length === 0 || nameEls.length === 0) {
-      postsContainer.innerHTML = "❌ No discussion content found in iframe.";
+    const posts = iframeDoc.querySelectorAll('.discussion_user_content');
+    if (!posts || posts.length === 0) {
+      status.innerHTML = '<span style="color: red;">❌ No discussion content found in iframe.</span>';
       return;
     }
 
-    let matchedPosts = [];
-    allPosts.forEach((post, i) => {
-      const author = nameEls[i]?.textContent.trim();
-      if (author === studentName) {
-        matchedPosts.push(post);
+    const studentName = extractStudentNameFromDropdown();
+    if (!studentName) {
+      status.innerHTML = '<span style="color: red;">❌ Could not detect student name from dropdown.</span>';
+      return;
+    }
+
+    status.innerHTML = `<h3>Posts by ${studentName}:</h3>`;
+    let found = false;
+    posts.forEach(post => {
+      const fullContent = post.innerText.trim();
+      if (fullContent && fullContent.includes(studentName)) {
+        const entry = document.createElement("div");
+        entry.style.marginBottom = "12px";
+        entry.style.padding = "8px";
+        entry.style.border = "1px solid #ddd";
+        entry.style.background = "#fff";
+        entry.textContent = fullContent;
+        status.appendChild(entry);
+        found = true;
       }
     });
 
-    if (matchedPosts.length === 0) {
-      postsContainer.innerHTML = "❌ No posts matched this student.";
-      return;
+    if (!found) {
+      const noMatch = document.createElement("div");
+      noMatch.textContent = `❌ No posts found matching "${studentName}".`;
+      noMatch.style.color = "red";
+      status.appendChild(noMatch);
     }
-
-    postsContainer.innerHTML = `<h3>${studentName}'s Posts:</h3>`;
-    matchedPosts.forEach((post) => {
-      const entry = document.createElement("div");
-      entry.style.marginBottom = "12px";
-      entry.style.padding = "8px";
-      entry.style.border = "1px solid #ddd";
-      entry.style.background = "#fff";
-      entry.innerHTML = post.innerHTML;
-      postsContainer.appendChild(entry);
-    });
   }
 
-  // Wait for iframe to load fully
-  setTimeout(() => {
-    const studentName = getStudentNameFallback();
-
-    if (!studentName) {
-      postsContainer.innerHTML = "❌ Could not detect student name from dropdown.";
-      return;
-    }
-
-    status.innerHTML = `🧑 Student: <strong>${studentName}</strong>`;
-    extractPostsFromDOM(studentName);
-  }, 2000);
+  setTimeout(extractPostsFromDOM, 1500);
 })();
