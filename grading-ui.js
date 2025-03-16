@@ -1,4 +1,4 @@
-// grading-us.js (version v16 - Strip Apostrophes & Hyphens for Word Count)
+// grading-us.js (version v17 - Accurate Word Count with Intl.Segmenter fallback)
 (function() {
   const url = window.location.href;
   const courseMatch = url.match(/courses\/(\d+)/);
@@ -40,7 +40,7 @@
   versionFooter.style.marginTop = "20px";
   versionFooter.style.fontSize = "0.8em";
   versionFooter.style.color = "#666";
-  versionFooter.textContent = "Version: v16";
+  versionFooter.textContent = "Version: v17";
   sidebar.appendChild(versionFooter);
 
   document.body.appendChild(sidebar);
@@ -60,14 +60,20 @@
 
   function countWordsSmart(text) {
     if (!text) return 0;
-    const cleaned = text
+    const plainText = text
       .replace(/<[^>]*>/g, '')
-      .replace(/[’‘]/g, "'")
+      .replace(/[\u2018\u2019\u201C\u201D]/g, "'")
       .replace(/[-']/g, '')
       .replace(/[^\w\s]/g, '')
       .replace(/\s+/g, ' ')
       .trim();
-    return cleaned ? cleaned.split(' ').length : 0;
+
+    if (window.Intl && Intl.Segmenter) {
+      const segmenter = new Intl.Segmenter("en", { granularity: "word" });
+      return Array.from(segmenter.segment(plainText)).filter(s => s.isWordLike).length;
+    }
+
+    return plainText ? plainText.split(' ').length : 0;
   }
 
   function renderPosts(entries) {
