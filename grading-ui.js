@@ -1,4 +1,4 @@
-// index.js
+// index.js (v2 - with version tag + improved student name detection)
 (function () {
   const url = window.location.href;
   const courseMatch = url.match(/courses\/(\d+)/);
@@ -53,11 +53,18 @@
       return;
     }
 
-    const studentNameEl = iframeDoc.querySelector('.student_selector .display_name') ||
-                          iframeDoc.querySelector('.student_name') ||
-                          iframeDoc.querySelector('h3');
+    // Attempt to extract student name from top SpeedGrader header
+    let studentName = null;
+    try {
+      const selectorLabel = document.querySelector('#student_selector_label');
+      const selectedName = document.querySelector('#student_selector .ui-select-match > span');
+      if (selectedName && selectedName.textContent) {
+        studentName = selectedName.textContent.trim();
+      }
+    } catch (err) {
+      studentName = null;
+    }
 
-    const studentName = studentNameEl ? studentNameEl.textContent.trim() : null;
     if (!studentName) {
       status.textContent = "❌ Could not detect student name.";
       return;
@@ -83,6 +90,15 @@
       entry.innerHTML = `<strong>Post #${i + 1}:</strong><br/>${post.innerHTML}`;
       sidebar.appendChild(entry);
     });
+
+    // Footer version tag
+    const footer = document.createElement("div");
+    footer.textContent = "Version 2";
+    footer.style.marginTop = "24px";
+    footer.style.fontSize = "12px";
+    footer.style.color = "#888";
+    footer.style.textAlign = "center";
+    sidebar.appendChild(footer);
   }
 
   // Wait for iframe to fully load
