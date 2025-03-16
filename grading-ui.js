@@ -1,4 +1,4 @@
-// grading-us.js (version v24 - Iframe Sidebar with Autograde Insertion)
+// grading-ui.js (version v24 - Iframe Sidebar with Autograde Insertion)
 (function() {
   const url = window.location.href;
   const courseMatch = url.match(/courses\/(\d+)/);
