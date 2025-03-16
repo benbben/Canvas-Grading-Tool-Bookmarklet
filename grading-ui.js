@@ -1,4 +1,4 @@
-// grading-us.js (version v18 - Accurate Word Count )
+// grading-us.js (version v19 - Initial Grading Logic)
 (function() {
   const url = window.location.href;
   const courseMatch = url.match(/courses\/(\d+)/);
