@@ -13,6 +13,7 @@
     return;
   }
 
+  // Create sidebar
   const sidebar = document.createElement("div");
   sidebar.style.position = "fixed";
   sidebar.style.top = "0";
@@ -32,61 +33,51 @@
   sidebar.appendChild(title);
 
   const status = document.createElement("div");
-  status.textContent = "Fetching discussion posts...";
+  status.textContent = "Looking up discussion...";
   sidebar.appendChild(status);
 
   document.body.appendChild(sidebar);
 
-  const discussionIdFromDom = (() => {
-    const links = [...document.querySelectorAll("a")];
-    const match = links.find(link =>
-      link.href.includes(`/courses/${courseId}/discussion_topics/`) &&
-      link.href.includes(`assignments/${assignmentId}`)
-    );
-    if (match) {
-      const idMatch = match.href.match(/discussion_topics\/(\d+)/);
-      return idMatch ? idMatch[1] : null;
-    }
-    return null;
-  })();
+  // Step 1: Fetch discussions to find the one with matching assignment_id
+  const discussionsUrl = `/api/v1/courses/${courseId}/discussion_topics?per_page=100`;
 
-  if (!discussionIdFromDom) {
-    status.textContent = "Could not determine discussion ID from the page.";
-    return;
-  }
-
-  const discussionId = discussionIdFromDom;
-  const domain = window.location.origin;
-  const apiUrl = `${domain}/api/v1/courses/${courseId}/discussion_topics/${discussionId}/entries?per_page=100`;
-
-  fetch(apiUrl, {
-    headers: {
-      "Accept": "application/json"
-    }
-  })
+  fetch(discussionsUrl)
     .then((res) => {
-      if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+      if (!res.ok) throw new Error("Failed to fetch discussion topics.");
       return res.json();
     })
-    .then((data) => {
-      const posts = data.filter(post => `${post.user_id}` === studentId);
-      if (posts.length === 0) {
-        status.textContent = "No valid posts found for this student.";
+    .then((discussions) => {
+      const match = discussions.find(d => d.assignment_id && d.assignment_id.toString() === assignmentId);
+      if (!match) throw new Error("No discussion found for this assignment.");
+      const discussionId = match.id;
+
+      // Step 2: Fetch posts in the matched discussion
+      const postsUrl = `/api/v1/courses/${courseId}/discussion_topics/${discussionId}/entries?per_page=100`;
+      return fetch(postsUrl)
+        .then((res) => {
+          if (!res.ok) throw new Error("Failed to fetch discussion entries.");
+          return res.json();
+        });
+    })
+    .then((entries) => {
+      const studentPosts = entries.filter(entry => `${entry.user_id}` === studentId);
+      if (studentPosts.length === 0) {
+        status.textContent = "No posts found for this student.";
         return;
       }
 
-      status.innerHTML = "<h3>Posts:</h3>";
-      posts.forEach(post => {
-        const entry = document.createElement("div");
-        entry.style.marginBottom = "12px";
-        entry.style.padding = "8px";
-        entry.style.border = "1px solid #ddd";
-        entry.style.background = "#fff";
-        entry.innerHTML = post.message;
-        status.appendChild(entry);
+      status.innerHTML = "<h3>Student Posts:</h3>";
+      studentPosts.forEach((post, index) => {
+        const postBox = document.createElement("div");
+        postBox.style.marginBottom = "12px";
+        postBox.style.padding = "10px";
+        postBox.style.border = "1px solid #ddd";
+        postBox.style.background = "#fff";
+        postBox.innerHTML = `<strong>Post ${index + 1}:</strong><br>${post.message}`;
+        status.appendChild(postBox);
       });
     })
     .catch((err) => {
-      status.textContent = `Error fetching posts: ${err.message}`;
+      status.textContent = `Error: ${err.message}`;
     });
 })();
