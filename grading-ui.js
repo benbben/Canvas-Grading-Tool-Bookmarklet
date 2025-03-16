@@ -1,4 +1,4 @@
-// grading-us.js (version v19 - Approve Button to Insert Grade and Feedback)
+// grading-us.js (version v20 - Approve Button Fix with Comment Injection)
 (function() {
   const url = window.location.href;
   const courseMatch = url.match(/courses\/(\d+)/);
@@ -53,7 +53,7 @@
   versionFooter.style.marginTop = "20px";
   versionFooter.style.fontSize = "0.8em";
   versionFooter.style.color = "#666";
-  versionFooter.textContent = "Version: v19";
+  versionFooter.textContent = "Version: v20";
   sidebar.appendChild(versionFooter);
 
   document.body.appendChild(sidebar);
@@ -169,13 +169,19 @@
         const gradeBox = document.getElementById("grading-box-extended");
         if (gradeBox) gradeBox.value = score;
 
-        const iframe = document.querySelector("iframe[name='rich_content_comment_ifr']");
+        const iframe = Array.from(document.querySelectorAll("iframe")).find(f =>
+          f.contentDocument?.body?.id === "tinymce"
+        );
         if (iframe) {
           const doc = iframe.contentDocument || iframe.contentWindow.document;
           const body = doc.querySelector("body#tinymce");
           if (body) {
             body.innerHTML = `<p>${comment}</p>`;
+          } else {
+            console.warn("Couldn't find tinymce body in iframe.");
           }
+        } else {
+          console.warn("Couldn't locate the comment iframe.");
         }
       };
     } catch (err) {
