@@ -1,5 +1,5 @@
-// index.js (DOM-only version v6 - no iframe)
-(function () {
+// index.js (version v7 - API-enhanced with DOM → ID → API logic)
+(function() {
   const url = window.location.href;
   const courseMatch = url.match(/courses\/(\d+)/);
   const assignmentMatch = url.match(/assignment_id=(\d+)/);
@@ -14,7 +14,7 @@
     return;
   }
 
-  // Create sidebar container
+  // Sidebar UI
   const sidebar = document.createElement("div");
   sidebar.style.position = "fixed";
   sidebar.style.top = "0";
@@ -34,61 +34,76 @@
   sidebar.appendChild(title);
 
   const status = document.createElement("div");
-  status.textContent = "Searching for student posts...";
+  status.textContent = "Loading posts...";
   sidebar.appendChild(status);
 
   const versionFooter = document.createElement("div");
   versionFooter.style.marginTop = "20px";
   versionFooter.style.fontSize = "0.8em";
   versionFooter.style.color = "#666";
-  versionFooter.textContent = "Version: v6";
+  versionFooter.textContent = "Version: v7";
   sidebar.appendChild(versionFooter);
 
   document.body.appendChild(sidebar);
+
+  async function fetchDiscussionId() {
+    const res = await fetch(`/api/v1/courses/${courseId}/assignments/${assignmentId}`);
+    if (!res.ok) throw new Error("Assignment lookup failed");
+    const data = await res.json();
+    return data.discussion_topic ? data.discussion_topic.id : null;
+  }
+
+  async function fetchDiscussionPosts(discussionId) {
+    const res = await fetch(`/api/v1/courses/${courseId}/discussion_topics/${discussionId}/view`);
+    if (!res.ok) throw new Error("Discussion lookup failed");
+    return res.json();
+  }
 
   function extractStudentNameFromDropdown() {
     const nameEl = document.querySelector(".ui-selectmenu-item-header");
     return nameEl ? nameEl.innerText.trim() : null;
   }
 
-  function extractPostsFromPage() {
-    const posts = document.querySelectorAll(".discussion_user_content");
-    const studentName = extractStudentNameFromDropdown();
-
-    if (!studentName) {
-      status.innerHTML = '<span style="color: red;">❌ Could not detect student name from dropdown.</span>';
-      return;
-    }
-
-    if (!posts || posts.length === 0) {
-      status.innerHTML = '<span style="color: red;">❌ No discussion content found on page.</span>';
-      return;
-    }
-
+  function renderPosts(studentName, posts) {
     status.innerHTML = `<h3>Posts by ${studentName}:</h3>`;
     let found = false;
 
-    posts.forEach((post) => {
-      const content = post.innerText.trim();
-      if (content.length > 0) {
-        const entry = document.createElement("div");
-        entry.style.marginBottom = "12px";
-        entry.style.padding = "8px";
-        entry.style.border = "1px solid #ddd";
-        entry.style.background = "#fff";
-        entry.textContent = content;
-        status.appendChild(entry);
+    posts.forEach(entry => {
+      const name = entry.user_display_name || "";
+      const message = entry.message || "";
+      if (name.trim() === studentName && message.trim()) {
+        const div = document.createElement("div");
+        div.style.marginBottom = "12px";
+        div.style.padding = "8px";
+        div.style.border = "1px solid #ddd";
+        div.style.background = "#fff";
+        div.innerHTML = message;
+        status.appendChild(div);
         found = true;
       }
     });
 
     if (!found) {
-      const noMatch = document.createElement("div");
-      noMatch.textContent = `❌ No discussion posts found for this student.`;
-      noMatch.style.color = "red";
-      status.appendChild(noMatch);
+      const none = document.createElement("div");
+      none.textContent = `❌ No posts found for ${studentName}`;
+      none.style.color = "red";
+      status.appendChild(none);
     }
   }
 
-  setTimeout(extractPostsFromPage, 1500);
+  async function loadPosts() {
+    try {
+      const studentName = extractStudentNameFromDropdown();
+      if (!studentName) throw new Error("Could not extract student name");
+      const discussionId = await fetchDiscussionId();
+      if (!discussionId) throw new Error("Failed to identify discussion ID");
+      const data = await fetchDiscussionPosts(discussionId);
+      const entries = [...data.view, ...(data.replies || [])];
+      renderPosts(studentName, entries);
+    } catch (err) {
+      status.innerHTML = `<span style='color:red;'>❌ ${err.message}</span>`;
+    }
+  }
+
+  loadPosts();
 })();
