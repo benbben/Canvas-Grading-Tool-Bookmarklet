@@ -1,4 +1,4 @@
-// grading-ui.js v1.6
+// grading-ui.js v1.7
 (function () {
   const url = window.location.href;
   const courseMatch = url.match(/courses\/(\d+)/);
@@ -14,7 +14,7 @@
     return;
   }
 
-  // Create sidebar container
+  // Sidebar UI setup
   const sidebar = document.createElement("div");
   sidebar.style.position = "fixed";
   sidebar.style.top = "0";
@@ -35,7 +35,7 @@
 
   const status = document.createElement("div");
   status.style.marginBottom = "12px";
-  status.textContent = "Searching for student name...";
+  status.textContent = "Detecting student...";
   sidebar.appendChild(status);
 
   const postsContainer = document.createElement("div");
@@ -46,18 +46,17 @@
   versionFooter.style.marginTop = "24px";
   versionFooter.style.fontSize = "12px";
   versionFooter.style.color = "#999";
-  versionFooter.textContent = "Version 1.6";
+  versionFooter.textContent = "Version 1.7";
   sidebar.appendChild(versionFooter);
 
   document.body.appendChild(sidebar);
 
-  function getStudentName() {
-    const sidebarEl = document.querySelector("#student_selector .student_selector_link");
-    if (sidebarEl) return sidebarEl.textContent.trim();
-
-    const bannerName = document.querySelector(".student_name");
-    if (bannerName) return bannerName.textContent.trim();
-
+  function getStudentNameFallback() {
+    const nameDropdown = document.querySelector("#student_select_menu");
+    if (nameDropdown) {
+      const selectedOption = nameDropdown.querySelector("option[selected]");
+      if (selectedOption) return selectedOption.textContent.trim();
+    }
     return null;
   }
 
@@ -107,10 +106,12 @@
     });
   }
 
+  // Wait for iframe to load fully
   setTimeout(() => {
-    const studentName = getStudentName();
+    const studentName = getStudentNameFallback();
+
     if (!studentName) {
-      postsContainer.innerHTML = "❌ Could not detect student name from sidebar.";
+      postsContainer.innerHTML = "❌ Could not detect student name from dropdown.";
       return;
     }
 
