@@ -1,3 +1,4 @@
+// index.js (DOM-only version)
 (function() {
   const url = window.location.href;
   const courseMatch = url.match(/courses\/(\d+)/);
@@ -13,7 +14,7 @@
     return;
   }
 
-  // Create sidebar
+  // Create sidebar container
   const sidebar = document.createElement("div");
   sidebar.style.position = "fixed";
   sidebar.style.top = "0";
@@ -33,51 +34,43 @@
   sidebar.appendChild(title);
 
   const status = document.createElement("div");
-  status.textContent = "Looking up discussion...";
+  status.textContent = "Searching for student posts...";
   sidebar.appendChild(status);
 
   document.body.appendChild(sidebar);
 
-  // Step 1: Fetch discussions to find the one with matching assignment_id
-  const discussionsUrl = `/api/v1/courses/${courseId}/discussion_topics?per_page=100`;
+  // Extract visible posts in SpeedGrader
+  function extractPostsFromDOM() {
+    const frame = document.querySelector('iframe#speedgrader_iframe');
+    if (!frame) {
+      status.textContent = "Could not locate SpeedGrader iframe.";
+      return;
+    }
 
-  fetch(discussionsUrl)
-    .then((res) => {
-      if (!res.ok) throw new Error("Failed to fetch discussion topics.");
-      return res.json();
-    })
-    .then((discussions) => {
-      const match = discussions.find(d => d.assignment_id && d.assignment_id.toString() === assignmentId);
-      if (!match) throw new Error("No discussion found for this assignment.");
-      const discussionId = match.id;
+    const iframeDoc = frame.contentDocument || frame.contentWindow.document;
+    if (!iframeDoc) {
+      status.textContent = "Unable to access iframe content.";
+      return;
+    }
 
-      // Step 2: Fetch posts in the matched discussion
-      const postsUrl = `/api/v1/courses/${courseId}/discussion_topics/${discussionId}/entries?per_page=100`;
-      return fetch(postsUrl)
-        .then((res) => {
-          if (!res.ok) throw new Error("Failed to fetch discussion entries.");
-          return res.json();
-        });
-    })
-    .then((entries) => {
-      const studentPosts = entries.filter(entry => `${entry.user_id}` === studentId);
-      if (studentPosts.length === 0) {
-        status.textContent = "No posts found for this student.";
-        return;
-      }
+    const posts = iframeDoc.querySelectorAll('.discussion_user_content');
+    if (!posts || posts.length === 0) {
+      status.textContent = "No discussion content found in iframe.";
+      return;
+    }
 
-      status.innerHTML = "<h3>Student Posts:</h3>";
-      studentPosts.forEach((post, index) => {
-        const postBox = document.createElement("div");
-        postBox.style.marginBottom = "12px";
-        postBox.style.padding = "10px";
-        postBox.style.border = "1px solid #ddd";
-        postBox.style.background = "#fff";
-        postBox.innerHTML = `<strong>Post ${index + 1}:</strong><br>${post.message}`;
-        status.appendChild(postBox);
-      });
-    })
-    .catch((err) => {
-      status.textContent = `Error: ${err.message}`;
+    status.innerHTML = "<h3>Student Posts:</h3>";
+    posts.forEach(post => {
+      const entry = document.createElement("div");
+      entry.style.marginBottom = "12px";
+      entry.style.padding = "8px";
+      entry.style.border = "1px solid #ddd";
+      entry.style.background = "#fff";
+      entry.innerHTML = post.innerHTML;
+      status.appendChild(entry);
     });
+  }
+
+  // Give iframe time to load
+  setTimeout(extractPostsFromDOM, 1500);
 })();
