@@ -1,4 +1,4 @@
-// grading-us.js (version v20 - Approve Button Fix with Comment Injection)
+// grading-us.js (version v21 - Improved Sidebar Positioning)
 (function() {
   const url = window.location.href;
   const courseMatch = url.match(/courses\/(\d+)/);
@@ -27,6 +27,26 @@
   sidebar.style.padding = "16px";
   sidebar.style.fontFamily = "Arial, sans-serif";
   sidebar.style.whiteSpace = "pre-wrap";
+  sidebar.style.boxShadow = "-4px 0 10px rgba(0,0,0,0.1)";
+  sidebar.style.transform = "translateX(0)";
+  sidebar.style.transition = "transform 0.3s ease-in-out";
+
+  const toggleBtn = document.createElement("button");
+  toggleBtn.textContent = "⇋";
+  toggleBtn.title = "Toggle Sidebar";
+  toggleBtn.style.position = "absolute";
+  toggleBtn.style.left = "-30px";
+  toggleBtn.style.top = "10px";
+  toggleBtn.style.width = "30px";
+  toggleBtn.style.height = "30px";
+  toggleBtn.style.cursor = "pointer";
+  sidebar.appendChild(toggleBtn);
+
+  let isCollapsed = false;
+  toggleBtn.onclick = () => {
+    isCollapsed = !isCollapsed;
+    sidebar.style.transform = isCollapsed ? "translateX(100%)" : "translateX(0)";
+  };
 
   const title = document.createElement("h2");
   title.textContent = "Canvas Grading Tool";
@@ -53,7 +73,7 @@
   versionFooter.style.marginTop = "20px";
   versionFooter.style.fontSize = "0.8em";
   versionFooter.style.color = "#666";
-  versionFooter.textContent = "Version: v20";
+  versionFooter.textContent = "Version: v21";
   sidebar.appendChild(versionFooter);
 
   document.body.appendChild(sidebar);
