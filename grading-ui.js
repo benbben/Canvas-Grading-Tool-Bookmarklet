@@ -1,5 +1,5 @@
-// index.js (DOM-only version v5)
-(function() {
+// index.js (DOM-only version v6 - no iframe)
+(function () {
   const url = window.location.href;
   const courseMatch = url.match(/courses\/(\d+)/);
   const assignmentMatch = url.match(/assignment_id=(\d+)/);
@@ -41,7 +41,7 @@
   versionFooter.style.marginTop = "20px";
   versionFooter.style.fontSize = "0.8em";
   versionFooter.style.color = "#666";
-  versionFooter.textContent = "Version: v5";
+  versionFooter.textContent = "Version: v6";
   sidebar.appendChild(versionFooter);
 
   document.body.appendChild(sidebar);
@@ -51,30 +51,32 @@
     return nameEl ? nameEl.innerText.trim() : null;
   }
 
-  function extractPostsFromDOM() {
-    const posts = document.querySelectorAll('.discussion_user_content');
-    if (!posts || posts.length === 0) {
-      status.innerHTML = '<span style="color: red;">❌ No discussion content found in main page.</span>';
-      return;
-    }
-
+  function extractPostsFromPage() {
+    const posts = document.querySelectorAll(".discussion_user_content");
     const studentName = extractStudentNameFromDropdown();
+
     if (!studentName) {
       status.innerHTML = '<span style="color: red;">❌ Could not detect student name from dropdown.</span>';
       return;
     }
 
+    if (!posts || posts.length === 0) {
+      status.innerHTML = '<span style="color: red;">❌ No discussion content found on page.</span>';
+      return;
+    }
+
     status.innerHTML = `<h3>Posts by ${studentName}:</h3>`;
     let found = false;
-    posts.forEach(post => {
-      const fullContent = post.innerText.trim();
-      if (fullContent && fullContent.includes(studentName)) {
+
+    posts.forEach((post) => {
+      const content = post.innerText.trim();
+      if (content.length > 0) {
         const entry = document.createElement("div");
         entry.style.marginBottom = "12px";
         entry.style.padding = "8px";
         entry.style.border = "1px solid #ddd";
         entry.style.background = "#fff";
-        entry.textContent = fullContent;
+        entry.textContent = content;
         status.appendChild(entry);
         found = true;
       }
@@ -82,11 +84,11 @@
 
     if (!found) {
       const noMatch = document.createElement("div");
-      noMatch.textContent = `❌ No posts found matching "${studentName}".`;
+      noMatch.textContent = `❌ No discussion posts found for this student.`;
       noMatch.style.color = "red";
       status.appendChild(noMatch);
     }
   }
 
-  setTimeout(extractPostsFromDOM, 1000);
+  setTimeout(extractPostsFromPage, 1500);
 })();
