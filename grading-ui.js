@@ -1,4 +1,4 @@
-// grading-us.js (version v18 - Accurate Word Count with Intl.Segmenter fallback)
+// grading-us.js (version v19 - Accurate Word Count with Intl.Segmenter fallback)
 (function() {
   const url = window.location.href;
   const courseMatch = url.match(/courses\/(\d+)/);
@@ -84,7 +84,7 @@
     status.innerHTML = `<h3>Posts by Student:</h3>`;
 
     filtered.forEach(entry => {
-      const wordCount = countWordsSmart(entry.message || "");
+      const wordCount = countWordsMinimal(entry.message || "");
       const div = document.createElement("div");
       div.style.marginBottom = "12px";
       div.style.padding = "8px";
