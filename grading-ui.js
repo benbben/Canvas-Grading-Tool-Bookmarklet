@@ -1,4 +1,4 @@
-// grading-ui.js v1.5
+// grading-ui.js v1.6
 (function () {
   const url = window.location.href;
   const courseMatch = url.match(/courses\/(\d+)/);
@@ -46,17 +46,15 @@
   versionFooter.style.marginTop = "24px";
   versionFooter.style.fontSize = "12px";
   versionFooter.style.color = "#999";
-  versionFooter.textContent = "Version 1.5";
+  versionFooter.textContent = "Version 1.6";
   sidebar.appendChild(versionFooter);
 
   document.body.appendChild(sidebar);
 
   function getStudentName() {
-    // Try grabbing from SpeedGrader sidebar
     const sidebarEl = document.querySelector("#student_selector .student_selector_link");
     if (sidebarEl) return sidebarEl.textContent.trim();
 
-    // Fallback to top banner (rare)
     const bannerName = document.querySelector(".student_name");
     if (bannerName) return bannerName.textContent.trim();
 
@@ -102,4 +100,21 @@
       const entry = document.createElement("div");
       entry.style.marginBottom = "12px";
       entry.style.padding = "8px";
-      entry.
+      entry.style.border = "1px solid #ddd";
+      entry.style.background = "#fff";
+      entry.innerHTML = post.innerHTML;
+      postsContainer.appendChild(entry);
+    });
+  }
+
+  setTimeout(() => {
+    const studentName = getStudentName();
+    if (!studentName) {
+      postsContainer.innerHTML = "❌ Could not detect student name from sidebar.";
+      return;
+    }
+
+    status.innerHTML = `🧑 Student: <strong>${studentName}</strong>`;
+    extractPostsFromDOM(studentName);
+  }, 2000);
+})();
