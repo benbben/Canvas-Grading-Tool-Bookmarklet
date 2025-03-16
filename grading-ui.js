@@ -1,4 +1,4 @@
-// grading-us.js (version v12 - Student ID Match + Word Count)
+// grading-us.js (version v13 - Full Post Scan + Accurate Word Count)
 (function() {
   const url = window.location.href;
   const courseMatch = url.match(/courses\/(\d+)/);
@@ -40,7 +40,7 @@
   versionFooter.style.marginTop = "20px";
   versionFooter.style.fontSize = "0.8em";
   versionFooter.style.color = "#666";
-  versionFooter.textContent = "Version: v12";
+  versionFooter.textContent = "Version: v13";
   sidebar.appendChild(versionFooter);
 
   document.body.appendChild(sidebar);
@@ -59,10 +59,7 @@
   }
 
   function countWords(text) {
-    return text
-      .replace(/(^\s*)|(\s*$)/gi, "")
-      .replace(/[^\w\s']/g, "")
-      .split(/\s+/).length;
+    return (text.match(/\b\w+(?:[-']\w+)*\b/g) || []).length;
   }
 
   function renderPosts(entries) {
@@ -75,7 +72,7 @@
       return;
     }
 
-    status.innerHTML = `<h3>Posts by Student ID ${studentId}:</h3>`;
+    status.innerHTML = `<h3>Posts by Student:</h3>`;
 
     filtered.forEach(entry => {
       const wordCount = countWords(entry.message || "");
@@ -94,7 +91,14 @@
       const discussionId = await fetchDiscussionId();
       if (!discussionId) throw new Error("Failed to identify discussion ID");
       const data = await fetchDiscussionPosts(discussionId);
-      const entries = [...data.view, ...(data.replies || [])];
+      const entries = [];
+      function flatten(posts) {
+        posts.forEach(p => {
+          entries.push(p);
+          if (p.replies && Array.isArray(p.replies)) flatten(p.replies);
+        });
+      }
+      flatten([...data.view, ...(data.replies || [])]);
       renderPosts(entries);
     } catch (err) {
       status.innerHTML = `<span style='color:red;'>❌ ${err.message}</span>`;
