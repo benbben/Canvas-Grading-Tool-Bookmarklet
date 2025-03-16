@@ -1,4 +1,4 @@
-// index.js (version v8 - relaxed name matching and debug logging)
+// index.js (version v9 – student ID filtering, display name optional)
 (function() {
   const url = window.location.href;
   const courseMatch = url.match(/courses\/(\d+)/);
@@ -14,6 +14,7 @@
     return;
   }
 
+  // Sidebar UI
   const sidebar = document.createElement("div");
   sidebar.style.position = "fixed";
   sidebar.style.top = "0";
@@ -36,17 +37,11 @@
   status.textContent = "Loading posts...";
   sidebar.appendChild(status);
 
-  const debug = document.createElement("div");
-  debug.style.marginTop = "10px";
-  debug.style.fontSize = "0.8em";
-  debug.style.color = "#555";
-  sidebar.appendChild(debug);
-
   const versionFooter = document.createElement("div");
   versionFooter.style.marginTop = "20px";
   versionFooter.style.fontSize = "0.8em";
   versionFooter.style.color = "#666";
-  versionFooter.textContent = "Version: v8";
+  versionFooter.textContent = "Version: v9";
   sidebar.appendChild(versionFooter);
 
   document.body.appendChild(sidebar);
@@ -64,28 +59,20 @@
     return res.json();
   }
 
-  function extractStudentNameFromDropdown() {
-    const nameEl = document.querySelector(".ui-selectmenu-item-header");
-    return nameEl ? nameEl.innerText.trim() : null;
-  }
-
-  function renderPosts(studentName, posts) {
-    const normalizedStudent = studentName.toLowerCase().replace(/[^\w\s]/g, "").trim();
+  function renderPosts(posts) {
+    status.innerHTML = `<h3>Posts by Student ID ${studentId}:</h3>`;
     let found = false;
-    status.innerHTML = `<h3>Posts by ${studentName}:</h3>`;
-    debug.innerHTML = "👀 Names in discussion:<br>";
 
     posts.forEach(entry => {
-      const name = (entry.user_display_name || "").trim();
-      const norm = name.toLowerCase().replace(/[^\w\s]/g, "");
-      debug.innerHTML += `– ${name}<br>`;
-      if (norm.includes(normalizedStudent) && entry.message?.trim()) {
+      const userId = String(entry.user_id || "");
+      const message = entry.message || "";
+      if (userId === studentId && message.trim()) {
         const div = document.createElement("div");
         div.style.marginBottom = "12px";
         div.style.padding = "8px";
         div.style.border = "1px solid #ddd";
         div.style.background = "#fff";
-        div.innerHTML = entry.message;
+        div.innerHTML = message;
         status.appendChild(div);
         found = true;
       }
@@ -93,7 +80,7 @@
 
     if (!found) {
       const none = document.createElement("div");
-      none.textContent = `❌ No posts found for ${studentName}`;
+      none.textContent = `❌ No posts found for Student ID ${studentId}`;
       none.style.color = "red";
       status.appendChild(none);
     }
@@ -101,13 +88,11 @@
 
   async function loadPosts() {
     try {
-      const studentName = extractStudentNameFromDropdown();
-      if (!studentName) throw new Error("Could not extract student name");
       const discussionId = await fetchDiscussionId();
       if (!discussionId) throw new Error("Failed to identify discussion ID");
       const data = await fetchDiscussionPosts(discussionId);
       const entries = [...data.view, ...(data.replies || [])];
-      renderPosts(studentName, entries);
+      renderPosts(entries);
     } catch (err) {
       status.innerHTML = `<span style='color:red;'>❌ ${err.message}</span>`;
     }
