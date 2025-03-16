@@ -1,4 +1,4 @@
-// index.js (DOM-only version v4)
+// index.js (DOM-only version v5)
 (function() {
   const url = window.location.href;
   const courseMatch = url.match(/courses\/(\d+)/);
@@ -41,7 +41,7 @@
   versionFooter.style.marginTop = "20px";
   versionFooter.style.fontSize = "0.8em";
   versionFooter.style.color = "#666";
-  versionFooter.textContent = "Version: v4";
+  versionFooter.textContent = "Version: v5";
   sidebar.appendChild(versionFooter);
 
   document.body.appendChild(sidebar);
@@ -52,21 +52,9 @@
   }
 
   function extractPostsFromDOM() {
-    const frame = document.querySelector('iframe#speedgrader_iframe');
-    if (!frame) {
-      status.innerHTML = '<span style="color: red;">❌ Could not locate SpeedGrader iframe.</span>';
-      return;
-    }
-
-    const iframeDoc = frame.contentDocument || frame.contentWindow.document;
-    if (!iframeDoc) {
-      status.innerHTML = '<span style="color: red;">❌ Unable to access iframe content.</span>';
-      return;
-    }
-
-    const posts = iframeDoc.querySelectorAll('.discussion_user_content');
+    const posts = document.querySelectorAll('.discussion_user_content');
     if (!posts || posts.length === 0) {
-      status.innerHTML = '<span style="color: red;">❌ No discussion content found in iframe.</span>';
+      status.innerHTML = '<span style="color: red;">❌ No discussion content found in main page.</span>';
       return;
     }
 
@@ -100,5 +88,5 @@
     }
   }
 
-  setTimeout(extractPostsFromDOM, 1500);
+  setTimeout(extractPostsFromDOM, 1000);
 })();
