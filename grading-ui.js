@@ -1,19 +1,14 @@
 (function() {
   const url = window.location.href;
-  const courseMatch = url.match(/courses\/(\d+)/);
-  const assignmentMatch = url.match(/assignment_id=(\d+)/);
-  const studentMatch = url.match(/student_id=(\d+)/);
-
-  const courseId = courseMatch ? courseMatch[1] : null;
-  const assignmentId = assignmentMatch ? assignmentMatch[1] : null;
-  const studentId = studentMatch ? studentMatch[1] : null;
+  const courseId = url.match(/courses\/(\d+)/)?.[1];
+  const assignmentId = url.match(/assignment_id=(\d+)/)?.[1];
+  const studentId = url.match(/student_id=(\d+)/)?.[1];
 
   if (!courseId || !assignmentId || !studentId) {
     alert("This tool must be used within the Canvas SpeedGrader page.");
     return;
   }
 
-  // Sidebar UI
   const sidebar = document.createElement("div");
   sidebar.style.position = "fixed";
   sidebar.style.top = "0";
@@ -40,16 +35,20 @@
   versionFooter.style.marginTop = "20px";
   versionFooter.style.fontSize = "0.8em";
   versionFooter.style.color = "#666";
-  versionFooter.textContent = "Version: v10";
+  versionFooter.textContent = "Version: v11";
   sidebar.appendChild(versionFooter);
 
   document.body.appendChild(sidebar);
+
+  function extractStudentNameFromDropdown() {
+    return document.querySelector(".ui-selectmenu-item-header")?.innerText.trim() || "Unknown Student";
+  }
 
   async function fetchDiscussionId() {
     const res = await fetch(`/api/v1/courses/${courseId}/assignments/${assignmentId}`);
     if (!res.ok) throw new Error("Assignment lookup failed");
     const data = await res.json();
-    return data.discussion_topic ? data.discussion_topic.id : null;
+    return data.discussion_topic?.id;
   }
 
   async function fetchDiscussionPosts(discussionId) {
@@ -58,39 +57,59 @@
     return res.json();
   }
 
-  function renderPosts(studentId, posts) {
-    const matchingPosts = posts
-      .filter(entry => String(entry.user_id) === String(studentId) && entry.message && entry.created_at)
+  function flattenPosts(entries) {
+    let flat = [];
+
+    function recurse(entry) {
+      flat.push(entry);
+      if (entry.replies && Array.isArray(entry.replies)) {
+        entry.replies.forEach(recurse);
+      }
+    }
+
+    entries.forEach(recurse);
+    return flat;
+  }
+
+  function renderPosts(studentName, studentId, data) {
+    const allPosts = flattenPosts([...(data.view || [])]);
+    const userPosts = allPosts
+      .filter(post => String(post.user_id) === String(studentId) && post.message)
       .sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
 
-    if (matchingPosts.length === 0) {
-      status.innerHTML = `<span style='color:red;'>❌ No posts found for student ID ${studentId}</span>`;
+    status.innerHTML = `<h3>Posts by ${studentName}:</h3>`;
+
+    if (userPosts.length === 0) {
+      const none = document.createElement("div");
+      none.textContent = `❌ No posts found`;
+      none.style.color = "red";
+      status.appendChild(none);
       return;
     }
 
-    status.innerHTML = `<h3>Posts by Student ID ${studentId}:</h3>`;
-    matchingPosts.forEach(entry => {
+    userPosts.forEach(post => {
       const div = document.createElement("div");
       div.style.marginBottom = "12px";
       div.style.padding = "8px";
       div.style.border = "1px solid #ddd";
       div.style.background = "#fff";
-      div.innerHTML = `<strong>${new Date(entry.created_at).toLocaleString()}</strong><br>${entry.message}`;
+      div.innerHTML = `<strong>${new Date(post.created_at).toLocaleString()}</strong><br>${post.message}`;
       status.appendChild(div);
     });
   }
 
-  async function loadPosts() {
+  async function load() {
     try {
+      const studentName = extractStudentNameFromDropdown();
       const discussionId = await fetchDiscussionId();
-      if (!discussionId) throw new Error("Failed to identify discussion ID");
+      if (!discussionId) throw new Error("No discussion ID found");
+
       const data = await fetchDiscussionPosts(discussionId);
-      const allEntries = [...(data.view || []), ...(data.replies || [])];
-      renderPosts(studentId, allEntries);
+      renderPosts(studentName, studentId, data);
     } catch (err) {
-      status.innerHTML = `<span style='color:red;'>❌ ${err.message}</span>`;
+      status.innerHTML = `<span style="color:red;">❌ ${err.message}</span>`;
     }
   }
 
-  loadPosts();
+  load();
 })();
