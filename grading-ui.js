@@ -1,5 +1,5 @@
-// grading-ui.js – Canvas Grading Sidebar Tool (v1.3)
-(function () {
+// grading-us.js (Version 1.4)
+(function() {
   const url = window.location.href;
   const courseMatch = url.match(/courses\/(\d+)/);
   const assignmentMatch = url.match(/assignment_id=(\d+)/);
@@ -28,77 +28,82 @@
   sidebar.style.padding = "16px";
   sidebar.style.fontFamily = "Arial, sans-serif";
   sidebar.style.whiteSpace = "pre-wrap";
-  sidebar.style.boxShadow = "0 0 10px rgba(0,0,0,0.2)";
 
   const title = document.createElement("h2");
   title.textContent = "Canvas Grading Tool";
   sidebar.appendChild(title);
 
-  const studentNameEl = document.createElement("div");
-  studentNameEl.style.fontWeight = "bold";
-  studentNameEl.style.marginBottom = "10px";
-  sidebar.appendChild(studentNameEl);
+  const status = document.createElement("div");
+  status.textContent = "Locating student posts...";
+  sidebar.appendChild(status);
 
-  const postContainer = document.createElement("div");
-  postContainer.textContent = "🔄 Loading student posts...";
-  sidebar.appendChild(postContainer);
-
-  const version = document.createElement("div");
-  version.style.marginTop = "20px";
-  version.style.fontSize = "12px";
-  version.style.color = "#888";
-  version.textContent = "Version 1.3";
-  sidebar.appendChild(version);
+  const footer = document.createElement("div");
+  footer.style.marginTop = "20px";
+  footer.style.fontSize = "12px";
+  footer.style.color = "#666";
+  footer.textContent = "Version 1.4";
+  sidebar.appendChild(footer);
 
   document.body.appendChild(sidebar);
 
-  // Extract visible posts and student name from SpeedGrader iframe
-  function extractContent() {
-    const iframe = document.querySelector("iframe#speedgrader_iframe");
-    if (!iframe) {
-      postContainer.textContent = "❌ Could not locate SpeedGrader iframe.";
+  function extractStudentName() {
+    const nameEl = document.querySelector("#student_selector_label");
+    return nameEl ? nameEl.textContent.trim() : null;
+  }
+
+  function extractPostsFromDOM() {
+    const frame = document.querySelector('iframe#speedgrader_iframe');
+    if (!frame) {
+      status.textContent = "❌ Could not locate SpeedGrader iframe.";
       return;
     }
 
-    const doc = iframe.contentDocument || iframe.contentWindow.document;
-    if (!doc) {
-      postContainer.textContent = "❌ Unable to access iframe content.";
+    const iframeDoc = frame.contentDocument || frame.contentWindow.document;
+    if (!iframeDoc) {
+      status.textContent = "❌ Unable to access iframe content.";
       return;
     }
 
-    // ✅ Try extracting student name from known DOM locations
-    let studentName = "";
-    const nameElement = doc.querySelector(".student_review h3") ||
-                        doc.querySelector(".student_name") ||
-                        doc.querySelector("h3");
-
-    if (nameElement && nameElement.textContent.trim()) {
-      studentName = nameElement.textContent.trim();
-      studentNameEl.textContent = "👤 " + studentName;
-    } else {
-      studentNameEl.textContent = "❌ Could not detect student name";
-      studentNameEl.style.color = "red";
-    }
-
-    // ✅ Pull all posts
-    const posts = doc.querySelectorAll(".discussion_user_content");
-    if (!posts || posts.length === 0) {
-      postContainer.textContent = "❌ No discussion content found.";
+    const studentName = extractStudentName();
+    if (!studentName) {
+      status.textContent = "❌ Could not detect student name from sidebar.";
       return;
     }
 
-    postContainer.innerHTML = "<h3>📝 Student Posts:</h3>";
-    posts.forEach((post, idx) => {
+    const discussionContainers = iframeDoc.querySelectorAll('.discussion_user_content');
+    if (!discussionContainers || discussionContainers.length === 0) {
+      status.textContent = "❌ No discussion content found in iframe.";
+      return;
+    }
+
+    const studentPosts = [];
+    discussionContainers.forEach(container => {
+      const parent = container.closest(".entry, .discussion-entry, div");
+      if (parent) {
+        const userMeta = parent.querySelector(".user_name, .author, .posted_by");
+        const rawText = userMeta ? userMeta.textContent.trim() : "";
+        if (rawText.includes(studentName)) {
+          studentPosts.push(container.innerHTML);
+        }
+      }
+    });
+
+    if (studentPosts.length === 0) {
+      status.textContent = `⚠️ No matching posts found for ${studentName}.`;
+      return;
+    }
+
+    status.innerHTML = `<h3>Posts by ${studentName}:</h3>`;
+    studentPosts.forEach(html => {
       const entry = document.createElement("div");
       entry.style.marginBottom = "12px";
       entry.style.padding = "8px";
       entry.style.border = "1px solid #ddd";
       entry.style.background = "#fff";
-      entry.innerHTML = `<strong>Post ${idx + 1}</strong><br>${post.innerHTML}`;
-      postContainer.appendChild(entry);
+      entry.innerHTML = html;
+      status.appendChild(entry);
     });
   }
 
-  // Allow iframe time to fully load
-  setTimeout(extractContent, 2000);
+  setTimeout(extractPostsFromDOM, 2000);
 })();
