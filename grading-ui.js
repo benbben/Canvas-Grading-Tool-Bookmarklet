@@ -112,4 +112,66 @@
   }
 
   loadPosts();
+  // --- Grading Component ---
+// Call this function after you've gathered all student posts in an array (studentPosts)
+// and after you've fetched the assignment data (to get dueAt, if set).
+function gradeSubmission(studentPosts, dueAt) {
+  // Use the first post (initial post) for word count grading
+  const initialPost = studentPosts[0];
+  const initialWordCount = countWordsSmart(initialPost.message);
+  const numPosts = studentPosts.length;
+
+  // Start with a perfect score of 10
+  let score = 10;
+  let deductionDetails = [];
+
+  // 1) Word count: if initial post is not between 100 and 165 words, deduct 2 points
+  if (initialWordCount < 100 || initialWordCount > 165) {
+    score -= 2;
+    deductionDetails.push("Word count not within 100-165 (-2)");
+  }
+
+  // 2) Post count: if the student only submitted one post, deduct 4 points
+  if (numPosts < 2) {
+    score -= 4;
+    deductionDetails.push("Only one post (-4)");
+  }
+
+  // 3) Due date: if the initial post was submitted after the due date, deduct 5 points
+  if (dueAt) {
+    const dueDate = new Date(dueAt);
+    const initialPostDate = new Date(initialPost.created_at);
+    if (initialPostDate > dueDate) {
+      score -= 5;
+      deductionDetails.push("Posted after due date (-5)");
+    }
+  }
+
+  // Ensure the final score is at least 2 points.
+  if (score < 2) score = 2;
+
+  // Generate feedback comment
+  let comment = `Your initial post contains ${initialWordCount} words. `;
+  comment += (initialWordCount >= 100 && initialWordCount <= 165)
+    ? "This meets the word count requirement. "
+    : "This does not meet the word count requirement. ";
+  comment += `You submitted ${numPosts} post${numPosts > 1 ? "s" : ""}. `;
+  if (deductionDetails.length > 0) {
+    comment += "Deductions: " + deductionDetails.join(", ") + ". ";
+  } else {
+    comment += "Great job meeting all criteria! ";
+  }
+  comment += `Your final score is ${score}/10.`;
+  
+  return { score, comment };
+}
+
+// Example usage:
+// Suppose after processing, you have:
+// - studentPosts: an array of the student's posts (each with a .message and .created_at)
+// - assignmentData: the assignment data from the API (which includes due_at)
+// You would then do something like:
+// const gradeResult = gradeSubmission(studentPosts, assignmentData.due_at);
+// Then render gradeResult.comment in your UI for feedback.
+
 })();
