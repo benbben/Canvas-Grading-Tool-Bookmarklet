@@ -1,4 +1,4 @@
-// grading-us.js (version v14 - Sorted Posts + Intl.Segmenter Word Count)
+// grading-us.js (version v15 - Smart Word Count + Timestamp Sort)
 (function() {
   const url = window.location.href;
   const courseMatch = url.match(/courses\/(\d+)/);
@@ -40,7 +40,7 @@
   versionFooter.style.marginTop = "20px";
   versionFooter.style.fontSize = "0.8em";
   versionFooter.style.color = "#666";
-  versionFooter.textContent = "Version: v14";
+  versionFooter.textContent = "Version: v15";
   sidebar.appendChild(versionFooter);
 
   document.body.appendChild(sidebar);
@@ -58,31 +58,28 @@
     return res.json();
   }
 
-  function countWordsIntl(text) {
-    try {
-      const segmenter = new Intl.Segmenter("en", { granularity: "word" });
-      const segments = [...segmenter.segment(text)];
-      return segments.filter(s => s.isWordLike).length;
-    } catch (e) {
-      // fallback
-      return (text.match(/\b\w+(?:[-']\w+)*\b/g) || []).length;
-    }
+  function countWordsSmart(text) {
+    if (!text) return 0;
+    const matches = text.match(/\b[\w'-]+\b/g) || [];
+    const words = matches.filter(word => /[a-zA-Z0-9]/.test(word) && !/^[-']+$/.test(word));
+    return words.length;
   }
 
   function renderPosts(entries) {
-    const filtered = entries
-      .filter(entry => entry.user_id == studentId && entry.message && entry.message.trim())
-      .sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+    const filtered = entries.filter(entry =>
+      entry.user_id == studentId && entry.message && entry.message.trim()
+    );
 
     if (filtered.length === 0) {
       status.innerHTML = `<div style="color:red;">❌ No posts found for student ID ${studentId}</div>`;
       return;
     }
 
+    filtered.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
     status.innerHTML = `<h3>Posts by Student:</h3>`;
 
     filtered.forEach(entry => {
-      const wordCount = countWordsIntl(entry.message || "");
+      const wordCount = countWordsSmart(entry.message || "");
       const div = document.createElement("div");
       div.style.marginBottom = "12px";
       div.style.padding = "8px";
