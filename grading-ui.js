@@ -53,7 +53,7 @@
 
   const discussionId = discussionIdFromDom || assignmentId;
 
-  const apiUrl = `/api/v1/courses/${courseId}/discussion_topics/${discussionId}/entries?per_page=100`;
+  const apiUrl = `/courses/${courseId}/discussion_topics/${discussionId}/entries?per_page=100`;
 
   fetch(apiUrl)
     .then((res) => {
