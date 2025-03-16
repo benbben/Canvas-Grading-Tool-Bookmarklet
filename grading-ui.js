@@ -1,4 +1,4 @@
-// grading-us.js (version v21 - Improved Sidebar Positioning)
+// grading-us.js (version v22 - Docked Right Sidebar Layout)
 (function() {
   const url = window.location.href;
   const courseMatch = url.match(/courses\/(\d+)/);
@@ -73,7 +73,7 @@
   versionFooter.style.marginTop = "20px";
   versionFooter.style.fontSize = "0.8em";
   versionFooter.style.color = "#666";
-  versionFooter.textContent = "Version: v21";
+  versionFooter.textContent = "Version: v22";
   sidebar.appendChild(versionFooter);
 
   document.body.appendChild(sidebar);
