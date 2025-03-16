@@ -1,14 +1,20 @@
+// grading-us.js (version v11 - Word Count Fixed)
 (function() {
   const url = window.location.href;
-  const courseId = url.match(/courses\/(\d+)/)?.[1];
-  const assignmentId = url.match(/assignment_id=(\d+)/)?.[1];
-  const studentId = url.match(/student_id=(\d+)/)?.[1];
+  const courseMatch = url.match(/courses\/(\d+)/);
+  const assignmentMatch = url.match(/assignment_id=(\d+)/);
+  const studentMatch = url.match(/student_id=(\d+)/);
+
+  const courseId = courseMatch ? courseMatch[1] : null;
+  const assignmentId = assignmentMatch ? assignmentMatch[1] : null;
+  const studentId = studentMatch ? studentMatch[1] : null;
 
   if (!courseId || !assignmentId || !studentId) {
     alert("This tool must be used within the Canvas SpeedGrader page.");
     return;
   }
 
+  // Sidebar UI
   const sidebar = document.createElement("div");
   sidebar.style.position = "fixed";
   sidebar.style.top = "0";
@@ -40,15 +46,11 @@
 
   document.body.appendChild(sidebar);
 
-  function extractStudentNameFromDropdown() {
-    return document.querySelector(".ui-selectmenu-item-header")?.innerText.trim() || "Unknown Student";
-  }
-
   async function fetchDiscussionId() {
     const res = await fetch(`/api/v1/courses/${courseId}/assignments/${assignmentId}`);
     if (!res.ok) throw new Error("Assignment lookup failed");
     const data = await res.json();
-    return data.discussion_topic?.id;
+    return data.discussion_topic ? data.discussion_topic.id : null;
   }
 
   async function fetchDiscussionPosts(discussionId) {
@@ -57,59 +59,61 @@
     return res.json();
   }
 
-  function flattenPosts(entries) {
-    let flat = [];
-
-    function recurse(entry) {
-      flat.push(entry);
-      if (entry.replies && Array.isArray(entry.replies)) {
-        entry.replies.forEach(recurse);
-      }
-    }
-
-    entries.forEach(recurse);
-    return flat;
+  function extractStudentNameFromDropdown() {
+    const nameEl = document.querySelector(".ui-selectmenu-item-header");
+    return nameEl ? nameEl.innerText.trim() : null;
   }
 
-  function renderPosts(studentName, studentId, data) {
-    const allPosts = flattenPosts([...(data.view || [])]);
-    const userPosts = allPosts
-      .filter(post => String(post.user_id) === String(studentId) && post.message)
-      .sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+  function countWords(text) {
+    return text
+      .replace(/(^\s*)|(\s*$)/gi, "") // Trim spaces
+      .replace(/[^\w\s']/g, "") // Remove punctuation except apostrophes
+      .split(/\s+/).length; // Count words
+  }
 
+  function renderPosts(studentName, posts) {
     status.innerHTML = `<h3>Posts by ${studentName}:</h3>`;
+    let found = false;
 
-    if (userPosts.length === 0) {
+    posts.forEach(entry => {
+      const name = entry.user_display_name || "";
+      const message = entry.message || "";
+      if (name.trim() === studentName && message.trim()) {
+        const wordCount = countWords(message);
+
+        const div = document.createElement("div");
+        div.style.marginBottom = "12px";
+        div.style.padding = "8px";
+        div.style.border = "1px solid #ddd";
+        div.style.background = "#fff";
+        div.innerHTML = `${message}<br><b>Word Count: ${wordCount}</b>`;
+        status.appendChild(div);
+
+        found = true;
+      }
+    });
+
+    if (!found) {
       const none = document.createElement("div");
-      none.textContent = `❌ No posts found`;
+      none.textContent = `❌ No posts found for ${studentName}`;
       none.style.color = "red";
       status.appendChild(none);
-      return;
     }
-
-    userPosts.forEach(post => {
-      const div = document.createElement("div");
-      div.style.marginBottom = "12px";
-      div.style.padding = "8px";
-      div.style.border = "1px solid #ddd";
-      div.style.background = "#fff";
-      div.innerHTML = `<strong>${new Date(post.created_at).toLocaleString()}</strong><br>${post.message}`;
-      status.appendChild(div);
-    });
   }
 
-  async function load() {
+  async function loadPosts() {
     try {
       const studentName = extractStudentNameFromDropdown();
+      if (!studentName) throw new Error("Could not extract student name");
       const discussionId = await fetchDiscussionId();
-      if (!discussionId) throw new Error("No discussion ID found");
-
+      if (!discussionId) throw new Error("Failed to identify discussion ID");
       const data = await fetchDiscussionPosts(discussionId);
-      renderPosts(studentName, studentId, data);
+      const entries = [...data.view, ...(data.replies || [])];
+      renderPosts(studentName, entries);
     } catch (err) {
-      status.innerHTML = `<span style="color:red;">❌ ${err.message}</span>`;
+      status.innerHTML = `<span style='color:red;'>❌ ${err.message}</span>`;
     }
   }
 
-  load();
+  loadPosts();
 })();
