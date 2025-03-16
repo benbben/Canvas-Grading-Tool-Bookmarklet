@@ -1,4 +1,4 @@
-// grading-us.js (version v13 - Full Post Scan + Accurate Word Count)
+// grading-us.js (version v14 - Sorted Posts + Intl.Segmenter Word Count)
 (function() {
   const url = window.location.href;
   const courseMatch = url.match(/courses\/(\d+)/);
@@ -40,7 +40,7 @@
   versionFooter.style.marginTop = "20px";
   versionFooter.style.fontSize = "0.8em";
   versionFooter.style.color = "#666";
-  versionFooter.textContent = "Version: v13";
+  versionFooter.textContent = "Version: v14";
   sidebar.appendChild(versionFooter);
 
   document.body.appendChild(sidebar);
@@ -58,14 +58,21 @@
     return res.json();
   }
 
-  function countWords(text) {
-    return (text.match(/\b\w+(?:[-']\w+)*\b/g) || []).length;
+  function countWordsIntl(text) {
+    try {
+      const segmenter = new Intl.Segmenter("en", { granularity: "word" });
+      const segments = [...segmenter.segment(text)];
+      return segments.filter(s => s.isWordLike).length;
+    } catch (e) {
+      // fallback
+      return (text.match(/\b\w+(?:[-']\w+)*\b/g) || []).length;
+    }
   }
 
   function renderPosts(entries) {
-    const filtered = entries.filter(entry =>
-      entry.user_id == studentId && entry.message && entry.message.trim()
-    );
+    const filtered = entries
+      .filter(entry => entry.user_id == studentId && entry.message && entry.message.trim())
+      .sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
 
     if (filtered.length === 0) {
       status.innerHTML = `<div style="color:red;">❌ No posts found for student ID ${studentId}</div>`;
@@ -75,7 +82,7 @@
     status.innerHTML = `<h3>Posts by Student:</h3>`;
 
     filtered.forEach(entry => {
-      const wordCount = countWords(entry.message || "");
+      const wordCount = countWordsIntl(entry.message || "");
       const div = document.createElement("div");
       div.style.marginBottom = "12px";
       div.style.padding = "8px";
