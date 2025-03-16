@@ -1,4 +1,4 @@
-// grading-us.js (version v11 - Word Count Fixed)
+// grading-us.js (version v12 - Student ID Match + Word Count)
 (function() {
   const url = window.location.href;
   const courseMatch = url.match(/courses\/(\d+)/);
@@ -14,7 +14,6 @@
     return;
   }
 
-  // Sidebar UI
   const sidebar = document.createElement("div");
   sidebar.style.position = "fixed";
   sidebar.style.top = "0";
@@ -41,7 +40,7 @@
   versionFooter.style.marginTop = "20px";
   versionFooter.style.fontSize = "0.8em";
   versionFooter.style.color = "#666";
-  versionFooter.textContent = "Version: v11";
+  versionFooter.textContent = "Version: v12";
   sidebar.appendChild(versionFooter);
 
   document.body.appendChild(sidebar);
@@ -59,57 +58,44 @@
     return res.json();
   }
 
-  function extractStudentNameFromDropdown() {
-    const nameEl = document.querySelector(".ui-selectmenu-item-header");
-    return nameEl ? nameEl.innerText.trim() : null;
-  }
-
   function countWords(text) {
     return text
-      .replace(/(^\s*)|(\s*$)/gi, "") // Trim spaces
-      .replace(/[^\w\s']/g, "") // Remove punctuation except apostrophes
-      .split(/\s+/).length; // Count words
+      .replace(/(^\s*)|(\s*$)/gi, "")
+      .replace(/[^\w\s']/g, "")
+      .split(/\s+/).length;
   }
 
-  function renderPosts(studentName, posts) {
-    status.innerHTML = `<h3>Posts by ${studentName}:</h3>`;
-    let found = false;
+  function renderPosts(entries) {
+    const filtered = entries.filter(entry =>
+      entry.user_id == studentId && entry.message && entry.message.trim()
+    );
 
-    posts.forEach(entry => {
-      const name = entry.user_display_name || "";
-      const message = entry.message || "";
-      if (name.trim() === studentName && message.trim()) {
-        const wordCount = countWords(message);
-
-        const div = document.createElement("div");
-        div.style.marginBottom = "12px";
-        div.style.padding = "8px";
-        div.style.border = "1px solid #ddd";
-        div.style.background = "#fff";
-        div.innerHTML = `${message}<br><b>Word Count: ${wordCount}</b>`;
-        status.appendChild(div);
-
-        found = true;
-      }
-    });
-
-    if (!found) {
-      const none = document.createElement("div");
-      none.textContent = `❌ No posts found for ${studentName}`;
-      none.style.color = "red";
-      status.appendChild(none);
+    if (filtered.length === 0) {
+      status.innerHTML = `<div style="color:red;">❌ No posts found for student ID ${studentId}</div>`;
+      return;
     }
+
+    status.innerHTML = `<h3>Posts by Student ID ${studentId}:</h3>`;
+
+    filtered.forEach(entry => {
+      const wordCount = countWords(entry.message || "");
+      const div = document.createElement("div");
+      div.style.marginBottom = "12px";
+      div.style.padding = "8px";
+      div.style.border = "1px solid #ddd";
+      div.style.background = "#fff";
+      div.innerHTML = `${entry.message}<br><b>Word Count: ${wordCount}</b>`;
+      status.appendChild(div);
+    });
   }
 
   async function loadPosts() {
     try {
-      const studentName = extractStudentNameFromDropdown();
-      if (!studentName) throw new Error("Could not extract student name");
       const discussionId = await fetchDiscussionId();
       if (!discussionId) throw new Error("Failed to identify discussion ID");
       const data = await fetchDiscussionPosts(discussionId);
       const entries = [...data.view, ...(data.replies || [])];
-      renderPosts(studentName, entries);
+      renderPosts(entries);
     } catch (err) {
       status.innerHTML = `<span style='color:red;'>❌ ${err.message}</span>`;
     }
