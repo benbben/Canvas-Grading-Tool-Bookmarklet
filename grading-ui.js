@@ -58,23 +58,17 @@
     return res.json();
   }
 
-  function countWordsSmart(text) {
-    if (!text) return 0;
-    const plainText = text
-      .replace(/<[^>]*>/g, '')
-      .replace(/[\u2018\u2019\u201C\u201D]/g, "'")
-      .replace(/[-']/g, '')
-      .replace(/[^\w\s]/g, '')
-      .replace(/\s+/g, ' ')
-      .trim();
+  function countWordsMinimal(text) {
+  const plain = text.replace(/\s+/g, ' ').trim();
 
-    if (window.Intl && Intl.Segmenter) {
-      const segmenter = new Intl.Segmenter("en", { granularity: "word" });
-      return Array.from(segmenter.segment(plainText)).filter(s => s.isWordLike).length;
-    }
-
-    return plainText ? plainText.split(' ').length : 0;
+  if (window.Intl && Intl.Segmenter) {
+    const segmenter = new Intl.Segmenter("en", { granularity: "word" });
+    return Array.from(segmenter.segment(plain)).filter(s => s.isWordLike).length;
   }
+
+  return plain ? plain.split(' ').length : 0;
+}
+
 
   function renderPosts(entries) {
     const filtered = entries.filter(entry =>
