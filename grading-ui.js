@@ -1,5 +1,3 @@
-// index.js
-
 (function() {
   const url = window.location.href;
   const courseMatch = url.match(/courses\/(\d+)/);
@@ -15,7 +13,6 @@
     return;
   }
 
-  // Create sidebar container
   const sidebar = document.createElement("div");
   sidebar.style.position = "fixed";
   sidebar.style.top = "0";
@@ -40,10 +37,12 @@
 
   document.body.appendChild(sidebar);
 
-  // Find the correct discussion ID for this assignment ID using the DOM if available
   const discussionIdFromDom = (() => {
     const links = [...document.querySelectorAll("a")];
-    const match = links.find(link => link.href.includes(`/courses/${courseId}/discussion_topics/`) && link.href.includes(`assignments/${assignmentId}`));
+    const match = links.find(link =>
+      link.href.includes(`/courses/${courseId}/discussion_topics/`) &&
+      link.href.includes(`assignments/${assignmentId}`)
+    );
     if (match) {
       const idMatch = match.href.match(/discussion_topics\/(\d+)/);
       return idMatch ? idMatch[1] : null;
@@ -51,13 +50,22 @@
     return null;
   })();
 
-  const discussionId = discussionIdFromDom || assignmentId;
+  if (!discussionIdFromDom) {
+    status.textContent = "Could not determine discussion ID from the page.";
+    return;
+  }
 
-  const apiUrl = `/courses/${courseId}/discussion_topics/${discussionId}/entries?per_page=100`;
+  const discussionId = discussionIdFromDom;
+  const domain = window.location.origin;
+  const apiUrl = `${domain}/api/v1/courses/${courseId}/discussion_topics/${discussionId}/entries?per_page=100`;
 
-  fetch(apiUrl)
+  fetch(apiUrl, {
+    headers: {
+      "Accept": "application/json"
+    }
+  })
     .then((res) => {
-      if (!res.ok) throw new Error("Network response was not ok");
+      if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
       return res.json();
     })
     .then((data) => {
@@ -74,7 +82,7 @@
         entry.style.padding = "8px";
         entry.style.border = "1px solid #ddd";
         entry.style.background = "#fff";
-        entry.innerHTML = `${post.message}`;
+        entry.innerHTML = post.message;
         status.appendChild(entry);
       });
     })
