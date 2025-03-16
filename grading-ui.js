@@ -59,11 +59,21 @@
   }
 
   function countWordsSmart(text) {
-    if (!text) return 0;
-    const matches = text.match(/\b[\w'-]+\b/g) || [];
-    const words = matches.filter(word => /[a-zA-Z0-9]/.test(word) && !/^[-']+$/.test(word));
-    return words.length;
+  if (!text) return 0;
+
+  // Use Intl.Segmenter for high-accuracy where available
+  if (typeof Intl !== "undefined" && Intl.Segmenter) {
+    const segmenter = new Intl.Segmenter("en", { granularity: "word" });
+    return Array.from(segmenter.segment(text)).filter(seg =>
+      seg.isWordLike && /^[a-zA-Z0-9]/.test(seg.segment)
+    ).length;
   }
+
+  // Fallback: Match typical words (contractions/hyphenated allowed)
+  const matches = text.match(/\b[a-zA-Z0-9]+(?:['-][a-zA-Z0-9]+)?\b/g) || [];
+  return matches.length;
+}
+
 
   function renderPosts(entries) {
     const filtered = entries.filter(entry =>
