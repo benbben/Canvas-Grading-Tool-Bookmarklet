@@ -1,4 +1,3 @@
-// index.js (version v9 – student ID filtering, display name optional)
 (function() {
   const url = window.location.href;
   const courseMatch = url.match(/courses\/(\d+)/);
@@ -41,7 +40,7 @@
   versionFooter.style.marginTop = "20px";
   versionFooter.style.fontSize = "0.8em";
   versionFooter.style.color = "#666";
-  versionFooter.textContent = "Version: v9";
+  versionFooter.textContent = "Version: v10";
   sidebar.appendChild(versionFooter);
 
   document.body.appendChild(sidebar);
@@ -59,31 +58,26 @@
     return res.json();
   }
 
-  function renderPosts(posts) {
-    status.innerHTML = `<h3>Posts by Student ID ${studentId}:</h3>`;
-    let found = false;
+  function renderPosts(studentId, posts) {
+    const matchingPosts = posts
+      .filter(entry => String(entry.user_id) === String(studentId) && entry.message && entry.created_at)
+      .sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
 
-    posts.forEach(entry => {
-      const userId = String(entry.user_id || "");
-      const message = entry.message || "";
-      if (userId === studentId && message.trim()) {
-        const div = document.createElement("div");
-        div.style.marginBottom = "12px";
-        div.style.padding = "8px";
-        div.style.border = "1px solid #ddd";
-        div.style.background = "#fff";
-        div.innerHTML = message;
-        status.appendChild(div);
-        found = true;
-      }
-    });
-
-    if (!found) {
-      const none = document.createElement("div");
-      none.textContent = `❌ No posts found for Student ID ${studentId}`;
-      none.style.color = "red";
-      status.appendChild(none);
+    if (matchingPosts.length === 0) {
+      status.innerHTML = `<span style='color:red;'>❌ No posts found for student ID ${studentId}</span>`;
+      return;
     }
+
+    status.innerHTML = `<h3>Posts by Student ID ${studentId}:</h3>`;
+    matchingPosts.forEach(entry => {
+      const div = document.createElement("div");
+      div.style.marginBottom = "12px";
+      div.style.padding = "8px";
+      div.style.border = "1px solid #ddd";
+      div.style.background = "#fff";
+      div.innerHTML = `<strong>${new Date(entry.created_at).toLocaleString()}</strong><br>${entry.message}`;
+      status.appendChild(div);
+    });
   }
 
   async function loadPosts() {
@@ -91,8 +85,8 @@
       const discussionId = await fetchDiscussionId();
       if (!discussionId) throw new Error("Failed to identify discussion ID");
       const data = await fetchDiscussionPosts(discussionId);
-      const entries = [...data.view, ...(data.replies || [])];
-      renderPosts(entries);
+      const allEntries = [...(data.view || []), ...(data.replies || [])];
+      renderPosts(studentId, allEntries);
     } catch (err) {
       status.innerHTML = `<span style='color:red;'>❌ ${err.message}</span>`;
     }
