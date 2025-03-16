@@ -1,4 +1,4 @@
-// grading-us.js (version v18 - Condensed Feedback + Criteria Summary)
+// grading-us.js (version v19 - Approve Button to Insert Grade and Feedback)
 (function() {
   const url = window.location.href;
   const courseMatch = url.match(/courses\/(\d+)/);
@@ -40,11 +40,20 @@
   gradeDiv.style.marginTop = "20px";
   sidebar.appendChild(gradeDiv);
 
+  const approveBtn = document.createElement("button");
+  approveBtn.textContent = "✅ Approve Grade & Insert";
+  approveBtn.style.marginTop = "10px";
+  approveBtn.style.padding = "8px 12px";
+  approveBtn.style.fontWeight = "bold";
+  approveBtn.style.cursor = "pointer";
+  approveBtn.style.display = "none";
+  sidebar.appendChild(approveBtn);
+
   const versionFooter = document.createElement("div");
   versionFooter.style.marginTop = "20px";
   versionFooter.style.fontSize = "0.8em";
   versionFooter.style.color = "#666";
-  versionFooter.textContent = "Version: v18";
+  versionFooter.textContent = "Version: v19";
   sidebar.appendChild(versionFooter);
 
   document.body.appendChild(sidebar);
@@ -131,14 +140,12 @@
       }
       if (score < 2) score = 2;
 
-      // Generate summary and comment
       let summary = `<h3>Post Summary:</h3>`;
       studentPosts.forEach((post, idx) => {
         const wc = countWordsSmart(post.message);
         summary += `<div>Post ${idx + 1} word count: ${wc}</div>`;
       });
 
-      // Grading breakdown table
       let rubric = `<h3>Criteria Breakdown:</h3><table style="border-collapse: collapse; width: 100%;">
         <tr><th align="left">Criteria</th><th align="left">Result</th></tr>
         <tr><td>Initial post word count</td><td>${initialWordCount} words</td></tr>
@@ -155,8 +162,22 @@
       }
 
       status.innerHTML = summary + rubric;
-      gradeDiv.innerHTML = `<h3>Grade & Feedback:</h3><p>${comment}</p>`;
+      gradeDiv.innerHTML = `<h3>Grade & Feedback:</h3><p id="auto-feedback">${comment}</p>`;
+      approveBtn.style.display = "block";
 
+      approveBtn.onclick = () => {
+        const gradeBox = document.getElementById("grading-box-extended");
+        if (gradeBox) gradeBox.value = score;
+
+        const iframe = document.querySelector("iframe[name='rich_content_comment_ifr']");
+        if (iframe) {
+          const doc = iframe.contentDocument || iframe.contentWindow.document;
+          const body = doc.querySelector("body#tinymce");
+          if (body) {
+            body.innerHTML = `<p>${comment}</p>`;
+          }
+        }
+      };
     } catch (err) {
       status.innerHTML = `<span style='color:red;'>❌ ${err.message}</span>`;
     }
