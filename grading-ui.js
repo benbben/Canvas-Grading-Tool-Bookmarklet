@@ -1,4 +1,4 @@
-// index.js (DOM-only version, with student name filtering)
+// Canvas Grading Tool Bookmarklet
 (function () {
   const url = window.location.href;
   const courseMatch = url.match(/courses\/(\d+)/);
@@ -34,12 +34,27 @@
   sidebar.appendChild(title);
 
   const status = document.createElement("div");
-  status.textContent = "Searching for student posts...";
+  status.textContent = "Locating student and discussion posts...";
   sidebar.appendChild(status);
 
   document.body.appendChild(sidebar);
 
-  // Extract visible posts in SpeedGrader for the active student
+  // Attempt to find the current student's name from SpeedGrader dropdown
+  let studentName = null;
+  const nameDropdown = document.querySelector('#student_select_menu');
+  if (nameDropdown) {
+    const selectedOption = nameDropdown.querySelector('option[selected]');
+    if (selectedOption) {
+      studentName = selectedOption.textContent.trim();
+    }
+  }
+
+  if (!studentName) {
+    status.textContent = "Could not detect student name.";
+    return;
+  }
+
+  // Extract visible posts in SpeedGrader
   function extractPostsFromDOM() {
     const frame = document.querySelector('iframe#speedgrader_iframe');
     if (!frame) {
@@ -53,42 +68,39 @@
       return;
     }
 
-    const studentNameEl = document.querySelector('#student_select_menu .display_name');
-    if (!studentNameEl) {
-      status.textContent = "Could not detect student name.";
-      return;
-    }
+    const postContainers = iframeDoc.querySelectorAll('.discussion_user_content');
+    const allPosts = [];
 
-    const studentName = studentNameEl.textContent.trim();
-    const entries = iframeDoc.querySelectorAll('.entry');
+    postContainers.forEach(container => {
+      const authorBlock = container.closest('.entry');
+      if (!authorBlock) return;
 
-    const matched = [];
-    entries.forEach(entry => {
-      const author = entry.querySelector('.author_name');
-      const content = entry.querySelector('.discussion_user_content');
-      if (author && content && author.textContent.trim() === studentName) {
-        matched.push(content.innerHTML);
+      const authorNameEl = authorBlock.querySelector('.user_name');
+      if (!authorNameEl) return;
+
+      const authorName = authorNameEl.textContent.trim();
+      if (authorName === studentName) {
+        allPosts.push(container.innerHTML);
       }
     });
 
-    if (matched.length === 0) {
-      status.textContent = "No posts found for this student.";
+    if (allPosts.length === 0) {
+      status.innerHTML = `<b>No posts found for:</b> ${studentName}`;
       return;
     }
 
-    // Display matching posts
-    status.innerHTML = "<h3>Student Posts:</h3>";
-    matched.forEach(html => {
-      const div = document.createElement("div");
-      div.style.marginBottom = "12px";
-      div.style.padding = "8px";
-      div.style.border = "1px solid #ddd";
-      div.style.background = "#fff";
-      div.innerHTML = html;
-      status.appendChild(div);
+    status.innerHTML = `<h3>Posts by ${studentName}:</h3>`;
+    allPosts.forEach(postHTML => {
+      const entry = document.createElement("div");
+      entry.style.marginBottom = "12px";
+      entry.style.padding = "8px";
+      entry.style.border = "1px solid #ddd";
+      entry.style.background = "#fff";
+      entry.innerHTML = postHTML;
+      status.appendChild(entry);
     });
   }
 
-  // Delay slightly to allow iframe to finish loading
+  // Give iframe time to load
   setTimeout(extractPostsFromDOM, 1500);
 })();
