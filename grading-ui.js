@@ -1,4 +1,4 @@
-// grading-us.js (version v17 - Accurate Word Count with Intl.Segmenter fallback)
+// grading-us.js (version v18 - Accurate Word Count with Intl.Segmenter fallback)
 (function() {
   const url = window.location.href;
   const courseMatch = url.match(/courses\/(\d+)/);
