@@ -1,4 +1,4 @@
-// Canvas Grading Tool Bookmarklet
+// index.js
 (function () {
   const url = window.location.href;
   const courseMatch = url.match(/courses\/(\d+)/);
@@ -34,73 +34,57 @@
   sidebar.appendChild(title);
 
   const status = document.createElement("div");
-  status.textContent = "Locating student and discussion posts...";
+  status.textContent = "Searching for student posts...";
   sidebar.appendChild(status);
 
   document.body.appendChild(sidebar);
 
-  // Attempt to find the current student's name from SpeedGrader dropdown
-  let studentName = null;
-  const nameDropdown = document.querySelector('#student_select_menu');
-  if (nameDropdown) {
-    const selectedOption = nameDropdown.querySelector('option[selected]');
-    if (selectedOption) {
-      studentName = selectedOption.textContent.trim();
-    }
-  }
-
-  if (!studentName) {
-    status.textContent = "Could not detect student name.";
-    return;
-  }
-
-  // Extract visible posts in SpeedGrader
-  function extractPostsFromDOM() {
+  // Extract visible posts and student name in SpeedGrader iframe
+  function extractDataFromIframe() {
     const frame = document.querySelector('iframe#speedgrader_iframe');
     if (!frame) {
-      status.textContent = "Could not locate SpeedGrader iframe.";
+      status.textContent = "❌ Could not locate SpeedGrader iframe.";
       return;
     }
 
     const iframeDoc = frame.contentDocument || frame.contentWindow.document;
     if (!iframeDoc) {
-      status.textContent = "Unable to access iframe content.";
+      status.textContent = "❌ Unable to access iframe content.";
       return;
     }
 
-    const postContainers = iframeDoc.querySelectorAll('.discussion_user_content');
-    const allPosts = [];
+    const studentNameEl = iframeDoc.querySelector('.student_selector .display_name') ||
+                          iframeDoc.querySelector('.student_name') ||
+                          iframeDoc.querySelector('h3');
 
-    postContainers.forEach(container => {
-      const authorBlock = container.closest('.entry');
-      if (!authorBlock) return;
-
-      const authorNameEl = authorBlock.querySelector('.user_name');
-      if (!authorNameEl) return;
-
-      const authorName = authorNameEl.textContent.trim();
-      if (authorName === studentName) {
-        allPosts.push(container.innerHTML);
-      }
-    });
-
-    if (allPosts.length === 0) {
-      status.innerHTML = `<b>No posts found for:</b> ${studentName}`;
+    const studentName = studentNameEl ? studentNameEl.textContent.trim() : null;
+    if (!studentName) {
+      status.textContent = "❌ Could not detect student name.";
       return;
     }
 
-    status.innerHTML = `<h3>Posts by ${studentName}:</h3>`;
-    allPosts.forEach(postHTML => {
+    const posts = iframeDoc.querySelectorAll('.discussion_user_content');
+    if (!posts || posts.length === 0) {
+      status.textContent = `No discussion content found for ${studentName}.`;
+      return;
+    }
+
+    const nameBox = document.createElement("div");
+    nameBox.innerHTML = `<strong>Student:</strong> ${studentName}<br/><strong>Posts:</strong>`;
+    nameBox.style.marginBottom = "12px";
+    sidebar.appendChild(nameBox);
+
+    posts.forEach((post, i) => {
       const entry = document.createElement("div");
       entry.style.marginBottom = "12px";
       entry.style.padding = "8px";
       entry.style.border = "1px solid #ddd";
       entry.style.background = "#fff";
-      entry.innerHTML = postHTML;
-      status.appendChild(entry);
+      entry.innerHTML = `<strong>Post #${i + 1}:</strong><br/>${post.innerHTML}`;
+      sidebar.appendChild(entry);
     });
   }
 
-  // Give iframe time to load
-  setTimeout(extractPostsFromDOM, 1500);
+  // Wait for iframe to fully load
+  setTimeout(extractDataFromIframe, 2000);
 })();
