@@ -1,4 +1,4 @@
-// grading-us.js (version v17 - Accurate Word Count with Intl.Segmenter fallback)
+// grading-us.js (version v18 - Accurate Word Count )
 (function() {
   const url = window.location.href;
   const courseMatch = url.match(/courses\/(\d+)/);
@@ -58,23 +58,14 @@
     return res.json();
   }
 
-  function countWordsSmart(text) {
-    if (!text) return 0;
-    const plainText = text
-      .replace(/<[^>]*>/g, '')
-      .replace(/[\u2018\u2019\u201C\u201D]/g, "'")
-      .replace(/[-']/g, '')
-      .replace(/[^\w\s]/g, '')
-      .replace(/\s+/g, ' ')
-      .trim();
+  function countWords(str) {
+  // Remove HTML tags
+  const cleaned = str.replace(/<[^>]*>/g, '');
+  // Split the string by whitespace and filter out empty strings
+  const wordsArray = cleaned.trim().split(/\s+/).filter(word => word.length > 0);
+  return wordsArray.length;
+}
 
-    if (window.Intl && Intl.Segmenter) {
-      const segmenter = new Intl.Segmenter("en", { granularity: "word" });
-      return Array.from(segmenter.segment(plainText)).filter(s => s.isWordLike).length;
-    }
-
-    return plainText ? plainText.split(' ').length : 0;
-  }
 
   function renderPosts(entries) {
     const filtered = entries.filter(entry =>
@@ -90,7 +81,7 @@
     status.innerHTML = `<h3>Posts by Student:</h3>`;
 
     filtered.forEach(entry => {
-      const wordCount = countWordsSmart(entry.message || "");
+      const wordCount = countWords(entry.message || "");
       const div = document.createElement("div");
       div.style.marginBottom = "12px";
       div.style.padding = "8px";
