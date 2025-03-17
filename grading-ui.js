@@ -1,4 +1,4 @@
-// grading-ui.js (version v29 - Grade Persist Fix)
+// grading-ui.js (version v30 - Grade Persistence Fix Improved)
 (function () {
   console.log("[GradingTool] Initializing script...");
   let courseId, assignmentId, studentId;
@@ -30,7 +30,7 @@
   sidebar.style.padding = "16px";
   sidebar.style.overflowY = "auto";
   sidebar.style.fontFamily = "Arial, sans-serif";
-  sidebar.innerHTML = `<h2>Canvas Grading Tool</h2><div id="status">Initializing...</div><div id="posts"></div><div id="grade"></div><div style="margin-top:20px; font-size:0.8em; color:#666">Version: v29</div>`;
+  sidebar.innerHTML = `<h2>Canvas Grading Tool</h2><div id="status">Initializing...</div><div id="posts"></div><div id="grade"></div><div style="margin-top:20px; font-size:0.8em; color:#666">Version: v30</div>`;
   document.body.appendChild(sidebar);
 
   function countWordsSmart(text) {
@@ -134,8 +134,14 @@
         const gradeBox = document.getElementById("grading-box-extended");
         if (gradeBox) {
           gradeBox.focus();
-          gradeBox.value = score;
-          gradeBox.dispatchEvent(new Event("input", { bubbles: true }));
+          gradeBox.value = '';
+          const chars = String(score).split('');
+          chars.forEach(char => {
+            gradeBox.value += char;
+            const event = new Event("input", { bubbles: true });
+            gradeBox.dispatchEvent(event);
+          });
+          gradeBox.dispatchEvent(new Event("change", { bubbles: true }));
           gradeBox.blur();
         }
 
