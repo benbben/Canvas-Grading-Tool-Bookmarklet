@@ -1,4 +1,4 @@
-// grading-ui.js (version v26 - Sidebar DIV Refactor with Canvas Auth Context)
+// grading-ui.js (version v26 - Fully Inline Sidebar Tool)
 (function () {
   let courseId, assignmentId, studentId;
 
@@ -34,7 +34,7 @@
   sidebar.innerHTML = `<h2>Canvas Grading Tool</h2><div id="status">Initializing...</div><div id="posts"></div><div id="grade"></div><div style="margin-top:20px; font-size:0.8em; color:#666">Version: v26</div>`;
   document.body.appendChild(sidebar);
 
-  // Count words
+  // Word count logic
   function countWordsSmart(text) {
     if (!text) return 0;
     const plainText = text
