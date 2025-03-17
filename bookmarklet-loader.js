@@ -1,5 +1,5 @@
-// bookmarklet-loader.js (Injects sidebar iframe into Canvas SpeedGrader)
-(function() {
+// bookmarklet-loader.js (loads grading UI iframe into SpeedGrader)
+(function () {
   const url = window.location.href;
   const courseMatch = url.match(/courses\/(\d+)/);
   const assignmentMatch = url.match(/assignment_id=(\d+)/);
@@ -24,6 +24,8 @@
   iframe.style.zIndex = "9999";
   iframe.style.border = "none";
   iframe.style.boxShadow = "-4px 0 10px rgba(0,0,0,0.1)";
+  iframe.id = "grading-tool-iframe";
+
   document.body.appendChild(iframe);
 
   iframe.onload = () => {
