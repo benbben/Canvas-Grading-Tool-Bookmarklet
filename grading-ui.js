@@ -1,7 +1,8 @@
-// grading-ui.js (version v30 - Grade Persistence Fix Improved)
+// grading-ui.js (version v32 - Grade Persist + Blur + Reload on Student Change)
 (function () {
   console.log("[GradingTool] Initializing script...");
   let courseId, assignmentId, studentId;
+  let currentUrl = window.location.href;
 
   const url = window.location.href;
   const courseMatch = url.match(/courses\/(\d+)/);
@@ -30,7 +31,7 @@
   sidebar.style.padding = "16px";
   sidebar.style.overflowY = "auto";
   sidebar.style.fontFamily = "Arial, sans-serif";
-  sidebar.innerHTML = `<h2>Canvas Grading Tool</h2><div id="status">Initializing...</div><div id="posts"></div><div id="grade"></div><div style="margin-top:20px; font-size:0.8em; color:#666">Version: v30</div>`;
+  sidebar.innerHTML = `<h2>Canvas Grading Tool</h2><div id="status">Initializing...</div><div id="posts"></div><div id="grade"></div><div style="margin-top:20px; font-size:0.8em; color:#666">Version: v32</div>`;
   document.body.appendChild(sidebar);
 
   function countWordsSmart(text) {
@@ -138,11 +139,14 @@
           const chars = String(score).split('');
           chars.forEach(char => {
             gradeBox.value += char;
-            const event = new Event("input", { bubbles: true });
-            gradeBox.dispatchEvent(event);
+            gradeBox.dispatchEvent(new Event("input", { bubbles: true }));
           });
           gradeBox.dispatchEvent(new Event("change", { bubbles: true }));
           gradeBox.blur();
+
+          // Simulate tabbing out to confirm grade
+          const container = document.getElementById("grade_container");
+          if (container) container.click();
         }
 
         const iframeComment = Array.from(document.querySelectorAll("iframe")).find(f =>
@@ -153,6 +157,9 @@
           const body = doc.querySelector("body#tinymce");
           if (body) {
             body.innerHTML = `<p>${comment}</p>`;
+            // Simulate focus and blur to trigger save
+            body.focus();
+            setTimeout(() => body.blur(), 100);
           }
         }
       };
@@ -163,4 +170,20 @@
   }
 
   loadAndRender();
+
+  const observer = new MutationObserver(() => {
+    if (window.location.href !== currentUrl) {
+      const newUrl = window.location.href;
+      const newStudentMatch = newUrl.match(/student_id=(\d+)/);
+      const newStudentId = newStudentMatch ? newStudentMatch[1] : null;
+      if (newStudentId && newStudentId !== studentId) {
+        studentId = newStudentId;
+        currentUrl = newUrl;
+        document.getElementById("status").textContent = "Loading new student...";
+        loadAndRender();
+      }
+    }
+  });
+
+  observer.observe(document.body, { childList: true, subtree: true });
 })();
