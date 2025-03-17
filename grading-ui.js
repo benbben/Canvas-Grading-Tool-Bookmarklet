@@ -1,5 +1,4 @@
-console.log("✅ Grading UI script running...");
-// grading-ui.js (version v28 - Truly Docked Panel in SpeedGrader Layout)
+// grading-ui.js (version v27 - Docked Left Sidebar, No Overlay)
 (function () {
   let courseId, assignmentId, studentId;
 
@@ -17,42 +16,24 @@ console.log("✅ Grading UI script running...");
     return;
   }
 
-  // Locate the container that holds the SpeedGrader view
-  const layout = document.querySelector(".ic-app-main-content__main") || document.querySelector("#content");
-  if (!layout) {
-    alert("❌ Could not find SpeedGrader layout container.");
-    return;
-  }
-
-  // Ensure layout is flex so it accommodates the sidebar
-  layout.style.display = "flex";
-  layout.style.flexDirection = "row";
-  layout.style.alignItems = "flex-start";
-
-  // Create docked sidebar
+  // Sidebar container (docked to left instead of overlay)
   const sidebar = document.createElement("div");
   sidebar.id = "gradingToolSidebar";
+  sidebar.style.position = "fixed";
+  sidebar.style.top = "0";
+  sidebar.style.left = "0";
   sidebar.style.width = "400px";
+  sidebar.style.height = "100%";
+  sidebar.style.zIndex = "9999";
   sidebar.style.background = "#f9f9f9";
-  sidebar.style.borderLeft = "2px solid #ccc";
-  sidebar.style.boxShadow = "-4px 0 10px rgba(0,0,0,0.1)";
+  sidebar.style.borderRight = "2px solid #ccc";
+  sidebar.style.boxShadow = "4px 0 10px rgba(0,0,0,0.1)";
   sidebar.style.padding = "16px";
-  sidebar.style.marginLeft = "12px";
   sidebar.style.overflowY = "auto";
   sidebar.style.fontFamily = "Arial, sans-serif";
-  sidebar.style.maxHeight = "90vh";
-  sidebar.style.flexShrink = "0";
-  sidebar.innerHTML = `
-    <h2>Canvas Grading Tool</h2>
-    <div id="status">Initializing...</div>
-    <div id="posts"></div>
-    <div id="grade"></div>
-    <div style="margin-top:20px; font-size:0.8em; color:#666">Version: v28</div>
-  `;
+  sidebar.innerHTML = `<h2>Canvas Grading Tool</h2><div id="status">Initializing...</div><div id="posts"></div><div id="grade"></div><div style="margin-top:20px; font-size:0.8em; color:#666">Version: v27</div>`;
+  document.body.appendChild(sidebar);
 
-  layout.appendChild(sidebar);
-
-  // Word counter
   function countWordsSmart(text) {
     if (!text) return 0;
     const plainText = text
