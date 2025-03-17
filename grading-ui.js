@@ -1,4 +1,4 @@
-// grading-ui.js (version v27 - Docked Sidebar Layout)
+// grading-ui.js (version v28 - Truly Docked Panel in SpeedGrader Layout)
 (function () {
   let courseId, assignmentId, studentId;
 
@@ -16,9 +16,19 @@
     return;
   }
 
-  // Try to find the main SpeedGrader container to dock into
-  const container = document.querySelector("#right_side") || document.querySelector("#speedgrader") || document.body;
+  // Locate the container that holds the SpeedGrader view
+  const layout = document.querySelector(".ic-app-main-content__main") || document.querySelector("#content");
+  if (!layout) {
+    alert("❌ Could not find SpeedGrader layout container.");
+    return;
+  }
 
+  // Ensure layout is flex so it accommodates the sidebar
+  layout.style.display = "flex";
+  layout.style.flexDirection = "row";
+  layout.style.alignItems = "flex-start";
+
+  // Create docked sidebar
   const sidebar = document.createElement("div");
   sidebar.id = "gradingToolSidebar";
   sidebar.style.width = "400px";
@@ -26,7 +36,7 @@
   sidebar.style.borderLeft = "2px solid #ccc";
   sidebar.style.boxShadow = "-4px 0 10px rgba(0,0,0,0.1)";
   sidebar.style.padding = "16px";
-  sidebar.style.marginLeft = "20px";
+  sidebar.style.marginLeft = "12px";
   sidebar.style.overflowY = "auto";
   sidebar.style.fontFamily = "Arial, sans-serif";
   sidebar.style.maxHeight = "90vh";
@@ -36,15 +46,10 @@
     <div id="status">Initializing...</div>
     <div id="posts"></div>
     <div id="grade"></div>
-    <div style="margin-top:20px; font-size:0.8em; color:#666">Version: v27</div>
+    <div style="margin-top:20px; font-size:0.8em; color:#666">Version: v28</div>
   `;
 
-  // Inject into DOM
-  if (container) {
-    container.appendChild(sidebar);
-  } else {
-    document.body.appendChild(sidebar); // fallback
-  }
+  layout.appendChild(sidebar);
 
   // Word counter
   function countWordsSmart(text) {
