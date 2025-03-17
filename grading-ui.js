@@ -1,4 +1,4 @@
-// grading-ui.js (version v28 - Diagnostic Logging and Debug)
+// grading-ui.js (version v29 - Grade Persist Fix)
 (function () {
   console.log("[GradingTool] Initializing script...");
   let courseId, assignmentId, studentId;
@@ -30,7 +30,7 @@
   sidebar.style.padding = "16px";
   sidebar.style.overflowY = "auto";
   sidebar.style.fontFamily = "Arial, sans-serif";
-  sidebar.innerHTML = `<h2>Canvas Grading Tool</h2><div id="status">Initializing...</div><div id="posts"></div><div id="grade"></div><div style="margin-top:20px; font-size:0.8em; color:#666">Version: v28</div>`;
+  sidebar.innerHTML = `<h2>Canvas Grading Tool</h2><div id="status">Initializing...</div><div id="posts"></div><div id="grade"></div><div style="margin-top:20px; font-size:0.8em; color:#666">Version: v29</div>`;
   document.body.appendChild(sidebar);
 
   function countWordsSmart(text) {
@@ -126,13 +126,18 @@
       document.getElementById("grade").innerHTML = `
         ${internal}<br><br>
         <h4>Proposed Comment:</h4>
-        <textarea rows="4" style="width:100%;">${comment}</textarea><br><br>
+        <textarea rows="4" style="width:100%;" id="proposedComment">${comment}</textarea><br><br>
         <button id="approveBtn">✅ Approve & Fill Grade</button>
       `;
 
       document.getElementById("approveBtn").onclick = () => {
         const gradeBox = document.getElementById("grading-box-extended");
-        if (gradeBox) gradeBox.value = score;
+        if (gradeBox) {
+          gradeBox.focus();
+          gradeBox.value = score;
+          gradeBox.dispatchEvent(new Event("input", { bubbles: true }));
+          gradeBox.blur();
+        }
 
         const iframeComment = Array.from(document.querySelectorAll("iframe")).find(f =>
           f.contentDocument?.body?.id === "tinymce"
