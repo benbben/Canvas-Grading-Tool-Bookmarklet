@@ -1,3 +1,4 @@
+console.log("✅ Grading UI script running...");
 // grading-ui.js (version v28 - Truly Docked Panel in SpeedGrader Layout)
 (function () {
   let courseId, assignmentId, studentId;
