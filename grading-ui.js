@@ -1,8 +1,8 @@
-// grading-ui.js (version v27 - Docked Left Sidebar, No Overlay)
+// grading-ui.js (version v28 - Diagnostic Logging and Debug)
 (function () {
+  console.log("[GradingTool] Initializing script...");
   let courseId, assignmentId, studentId;
 
-  // Extract from URL
   const url = window.location.href;
   const courseMatch = url.match(/courses\/(\d+)/);
   const assignmentMatch = url.match(/assignment_id=(\d+)/);
@@ -16,7 +16,6 @@
     return;
   }
 
-  // Sidebar container (docked to left instead of overlay)
   const sidebar = document.createElement("div");
   sidebar.id = "gradingToolSidebar";
   sidebar.style.position = "fixed";
@@ -31,7 +30,7 @@
   sidebar.style.padding = "16px";
   sidebar.style.overflowY = "auto";
   sidebar.style.fontFamily = "Arial, sans-serif";
-  sidebar.innerHTML = `<h2>Canvas Grading Tool</h2><div id="status">Initializing...</div><div id="posts"></div><div id="grade"></div><div style="margin-top:20px; font-size:0.8em; color:#666">Version: v27</div>`;
+  sidebar.innerHTML = `<h2>Canvas Grading Tool</h2><div id="status">Initializing...</div><div id="posts"></div><div id="grade"></div><div style="margin-top:20px; font-size:0.8em; color:#666">Version: v28</div>`;
   document.body.appendChild(sidebar);
 
   function countWordsSmart(text) {
@@ -59,6 +58,7 @@
   }
 
   async function fetchJSON(url) {
+    console.log("[GradingTool] Fetching:", url);
     const res = await fetch(url);
     if (!res.ok) throw new Error(`Failed to fetch ${url}`);
     return res.json();
@@ -145,8 +145,8 @@
           }
         }
       };
-
     } catch (err) {
+      console.error("[GradingTool] loadAndRender error:", err);
       document.getElementById("status").innerHTML = `<span style='color:red;'>❌ ${err.message}</span>`;
     }
   }
