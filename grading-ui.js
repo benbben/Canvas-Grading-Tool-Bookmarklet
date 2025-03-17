@@ -1,14 +1,40 @@
-// grading-ui.js (version v27 - Fixed try/catch syntax)
+// grading-ui.js (version v26 - Sidebar DIV Refactor with Canvas Auth Context)
 (function () {
   let courseId, assignmentId, studentId;
 
-  // Setup UI Container
-  const container = document.createElement("div");
-  container.style.fontFamily = "Arial, sans-serif";
-  container.style.padding = "16px";
-  container.innerHTML = `<h2>Canvas Grading Tool</h2><div id="status">Initializing...</div><div id="posts"></div><div id="grade"></div><div style="margin-top:20px; font-size:0.8em; color:#666">Version: v27</div>`;
-  document.body.appendChild(container);
+  // Extract from URL
+  const url = window.location.href;
+  const courseMatch = url.match(/courses\/(\d+)/);
+  const assignmentMatch = url.match(/assignment_id=(\d+)/);
+  const studentMatch = url.match(/student_id=(\d+)/);
+  courseId = courseMatch ? courseMatch[1] : null;
+  assignmentId = assignmentMatch ? assignmentMatch[1] : null;
+  studentId = studentMatch ? studentMatch[1] : null;
 
+  if (!courseId || !assignmentId || !studentId) {
+    alert("This tool must be used within the Canvas SpeedGrader page.");
+    return;
+  }
+
+  // Sidebar container
+  const sidebar = document.createElement("div");
+  sidebar.id = "gradingToolSidebar";
+  sidebar.style.position = "fixed";
+  sidebar.style.top = "0";
+  sidebar.style.right = "0";
+  sidebar.style.width = "400px";
+  sidebar.style.height = "100%";
+  sidebar.style.zIndex = "9999";
+  sidebar.style.background = "#f9f9f9";
+  sidebar.style.borderLeft = "2px solid #ccc";
+  sidebar.style.boxShadow = "-4px 0 10px rgba(0,0,0,0.1)";
+  sidebar.style.padding = "16px";
+  sidebar.style.overflowY = "auto";
+  sidebar.style.fontFamily = "Arial, sans-serif";
+  sidebar.innerHTML = `<h2>Canvas Grading Tool</h2><div id="status">Initializing...</div><div id="posts"></div><div id="grade"></div><div style="margin-top:20px; font-size:0.8em; color:#666">Version: v26</div>`;
+  document.body.appendChild(sidebar);
+
+  // Count words
   function countWordsSmart(text) {
     if (!text) return 0;
     const plainText = text
@@ -21,12 +47,6 @@
     return plainText ? plainText.split(' ').length : 0;
   }
 
-  async function fetchJSON(url) {
-    const res = await fetch(url);
-    if (!res.ok) throw new Error(`Failed to fetch ${url}`);
-    return res.json();
-  }
-
   function flattenPosts(posts) {
     let flat = [];
     function recurse(list) {
@@ -37,6 +57,12 @@
     }
     recurse(posts);
     return flat;
+  }
+
+  async function fetchJSON(url) {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`Failed to fetch ${url}`);
+    return res.json();
   }
 
   async function loadAndRender() {
@@ -62,7 +88,6 @@
       }).join("<br>");
       document.getElementById("posts").innerHTML = `<h4>Summary:</h4>${postSummary}`;
 
-      // Grading logic
       const initialWordCount = countWordsSmart(studentPosts[0].message);
       const numPosts = studentPosts.length;
       const late = dueDate && new Date(studentPosts[0].created_at) > dueDate;
@@ -107,7 +132,19 @@
       `;
 
       document.getElementById("approveBtn").onclick = () => {
-        parent.postMessage({ type: "submit-grade", score, comment }, "*");
+        const gradeBox = document.getElementById("grading-box-extended");
+        if (gradeBox) gradeBox.value = score;
+
+        const iframeComment = Array.from(document.querySelectorAll("iframe")).find(f =>
+          f.contentDocument?.body?.id === "tinymce"
+        );
+        if (iframeComment) {
+          const doc = iframeComment.contentDocument || iframeComment.contentWindow.document;
+          const body = doc.querySelector("body#tinymce");
+          if (body) {
+            body.innerHTML = `<p>${comment}</p>`;
+          }
+        }
       };
 
     } catch (err) {
@@ -115,12 +152,5 @@
     }
   }
 
-  window.addEventListener("message", (event) => {
-    if (event.data?.type === "canvas-context") {
-      courseId = event.data.courseId;
-      assignmentId = event.data.assignmentId;
-      studentId = event.data.studentId;
-      loadAndRender();
-    }
-  });
+  loadAndRender();
 })();
