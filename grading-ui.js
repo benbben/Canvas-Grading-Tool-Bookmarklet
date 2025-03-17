@@ -1,4 +1,4 @@
-// grading-ui.js (version v26 - Fully Inline Sidebar Tool)
+// grading-ui.js (version v27 - Docked Sidebar Layout)
 (function () {
   let courseId, assignmentId, studentId;
 
@@ -16,25 +16,37 @@
     return;
   }
 
-  // Sidebar container
+  // Try to find the main SpeedGrader container to dock into
+  const container = document.querySelector("#right_side") || document.querySelector("#speedgrader") || document.body;
+
   const sidebar = document.createElement("div");
   sidebar.id = "gradingToolSidebar";
-  sidebar.style.position = "fixed";
-  sidebar.style.top = "0";
-  sidebar.style.right = "0";
   sidebar.style.width = "400px";
-  sidebar.style.height = "100%";
-  sidebar.style.zIndex = "9999";
   sidebar.style.background = "#f9f9f9";
   sidebar.style.borderLeft = "2px solid #ccc";
   sidebar.style.boxShadow = "-4px 0 10px rgba(0,0,0,0.1)";
   sidebar.style.padding = "16px";
+  sidebar.style.marginLeft = "20px";
   sidebar.style.overflowY = "auto";
   sidebar.style.fontFamily = "Arial, sans-serif";
-  sidebar.innerHTML = `<h2>Canvas Grading Tool</h2><div id="status">Initializing...</div><div id="posts"></div><div id="grade"></div><div style="margin-top:20px; font-size:0.8em; color:#666">Version: v26</div>`;
-  document.body.appendChild(sidebar);
+  sidebar.style.maxHeight = "90vh";
+  sidebar.style.flexShrink = "0";
+  sidebar.innerHTML = `
+    <h2>Canvas Grading Tool</h2>
+    <div id="status">Initializing...</div>
+    <div id="posts"></div>
+    <div id="grade"></div>
+    <div style="margin-top:20px; font-size:0.8em; color:#666">Version: v27</div>
+  `;
 
-  // Word count logic
+  // Inject into DOM
+  if (container) {
+    container.appendChild(sidebar);
+  } else {
+    document.body.appendChild(sidebar); // fallback
+  }
+
+  // Word counter
   function countWordsSmart(text) {
     if (!text) return 0;
     const plainText = text
