@@ -1,4 +1,4 @@
-// grading-ui.js (version v26 - Fixed try/catch error + Sidebar improvements)
+// grading-ui.js (version v27 - Fixed try/catch syntax)
 (function () {
   let courseId, assignmentId, studentId;
 
@@ -6,7 +6,7 @@
   const container = document.createElement("div");
   container.style.fontFamily = "Arial, sans-serif";
   container.style.padding = "16px";
-  container.innerHTML = `<h2>Canvas Grading Tool</h2><div id="status">Initializing...</div><div id="posts"></div><div id="grade"></div><div style="margin-top:20px; font-size:0.8em; color:#666">Version: v26</div>`;
+  container.innerHTML = `<h2>Canvas Grading Tool</h2><div id="status">Initializing...</div><div id="posts"></div><div id="grade"></div><div style="margin-top:20px; font-size:0.8em; color:#666">Version: v27</div>`;
   document.body.appendChild(container);
 
   function countWordsSmart(text) {
@@ -109,6 +109,7 @@
       document.getElementById("approveBtn").onclick = () => {
         parent.postMessage({ type: "submit-grade", score, comment }, "*");
       };
+
     } catch (err) {
       document.getElementById("status").innerHTML = `<span style='color:red;'>❌ ${err.message}</span>`;
     }
