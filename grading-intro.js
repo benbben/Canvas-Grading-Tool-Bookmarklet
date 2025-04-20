@@ -1,5 +1,5 @@
 // grading-intro.js
-// Version: v21
+// Version: v22
 // Description: Canvas SpeedGrader bookmarklet for grading 'Introduction' discussion posts using semantic rubric matching
 // Changelog:
 // - v1: Initial rubric-based grading logic
@@ -23,6 +23,7 @@
 // - v19: Fixed issue where comment text used outdated score and did not include reply points
 // - v20: Regenerates feedback comment at approval time based on current override score and rubric status
 // - v21: Unified table rendering logic for all rubric items including Late and Reply rows
+// - v22: Removed undefined rubricScore and rubricRows; recalculated score and labels from DOM
 
 (function () {
   console.log("[GradingTool] Initializing script...");
@@ -66,14 +67,14 @@
 
   sidebar.innerHTML = `
     <div style="display:flex; justify-content:space-between; align-items:center;">
-      <h2 style="margin:0;">Intro Grading Tool <span style='font-size:0.7em; color:#888;'>(v21)</span></h2>
+      <h2 style="margin:0;">Intro Grading Tool <span style='font-size:0.7em; color:#888;'>(v22)</span></h2>
       <button id="closeSidebar" style="font-size:16px; padding:4px 8px;">×</button>
     </div>
     <div id="status">Initializing...</div>
     <div id="posts"></div>
     <div id="rubric"></div>
     <div id="grade"></div>
-    <div style="margin-top:20px; font-size:0.8em; color:#666">Intro Rubric Version v21</div>
+    <div style="margin-top:20px; font-size:0.8em; color:#666">Intro Rubric Version v22</div>
   `;
 
   document.body.appendChild(sidebar);
@@ -187,7 +188,16 @@
 
       // Removed legacy rubricRows logic to prevent mismatch with table rendering
 
-      const totalScore = Math.max(0, rubricScore);
+      // Compute totalScore dynamically from rubric inputs
+      let totalScore = 0;
+      criteria.forEach((c, j) => {
+        const val = parseInt(document.getElementById(`rubric-${j}`)?.value || 0);
+        totalScore += isNaN(val) ? 0 : val;
+      });
+      const lateVal = parseInt(lateIntro ? -2 : 0);
+      const replyVal = parseInt(replyPost ? 4 : 0);
+      totalScore += lateVal + replyVal;
+      totalScore = Math.max(0, totalScore);
       const rubricTable = `<h4>Rubric:</h4>
         <table style='width:100%; border-collapse:collapse;'>
           <tr><th style='border:1px solid #ccc;'>Criterion</th><th style='border:1px solid #ccc;'>Met?</th><th style='border:1px solid #ccc;'>Points</th></tr>
@@ -258,7 +268,10 @@
         "Happy to have you here with us!"
       ];
       const randomGreeting = greetings[Math.floor(Math.random() * greetings.length)];
-      const missingLabels = rubricRows.filter(r => r.includes('❌')).map(r => r.match(/<td>(.*?)<\/td>/)?.[1]).filter(Boolean);
+      const missingLabels = Array.from(document.querySelectorAll("#rubric table tr"))
+        .filter(r => r.innerHTML.includes('❌'))
+        .map(r => r.querySelector("td")?.textContent.trim())
+        .filter(Boolean);
       const liveTotal = parseInt(document.getElementById("overrideScore")?.value || 0, 10);
       const comment = missingLabels.length === 0 ?
         `${randomGreeting} ✅ Great job addressing all parts of the introduction. Full credit earned.` :
