@@ -1,5 +1,5 @@
 // grading-intro.js
-// Version: v14
+// Version: v15
 // Description: Canvas SpeedGrader bookmarklet for grading 'Introduction' discussion posts using semantic rubric matching
 // Changelog:
 // - v1: Initial rubric-based grading logic
@@ -16,6 +16,7 @@
 // - v12: Increased sidebar width to avoid scrollbars
 // - v13: Sidebar width increased to 475px and planning interactive rubric cell editing
 // - v14: Rubric rows converted to editable score inputs that dynamically update total and icons
+// - v15: Fixed join syntax bug by replacing newline with empty string
 
 (function () {
   console.log("[GradingTool] Initializing script...");
@@ -59,14 +60,14 @@
 
   sidebar.innerHTML = `
     <div style="display:flex; justify-content:space-between; align-items:center;">
-      <h2 style="margin:0;">Intro Grading Tool <span style='font-size:0.7em; color:#888;'>(v14)</span></h2>
+      <h2 style="margin:0;">Intro Grading Tool <span style='font-size:0.7em; color:#888;'>(v15)</span></h2>
       <button id="closeSidebar" style="font-size:16px; padding:4px 8px;">×</button>
     </div>
     <div id="status">Initializing...</div>
     <div id="posts"></div>
     <div id="rubric"></div>
     <div id="grade"></div>
-    <div style="margin-top:20px; font-size:0.8em; color:#666">Intro Rubric Version v14</div>
+    <div style="margin-top:20px; font-size:0.8em; color:#666">Intro Rubric Version v15</div>
   `;
 
   document.body.appendChild(sidebar);
@@ -212,8 +213,7 @@
                 <input type='number' id='rubric-${i}' value='${value}' min='0' max='${c.points}' style='width:40px; text-align:center;'> / ${c.points}
               </td>
             </tr>`;
-          }).join("
-")}
+          }).join("")}
           <tr>
             <td colspan='2' style='border:1px solid #ccc; font-weight:bold;'>Total</td>
             <td style='border:1px solid #ccc; font-weight:bold;'><span id='rubric-total'>${totalScore}</span> / 10</td>
