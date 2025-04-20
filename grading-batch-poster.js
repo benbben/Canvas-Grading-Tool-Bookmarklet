@@ -124,7 +124,8 @@ if (postedStudentIds.size >= approved) {
 
     // Enter score
     const gradeBox = document.getElementById("grading-box-extended");
-    if (gradeBox) {
+    if (gradeBox) {gradeBox.style.boxShadow = '0 0 6px 3px #4CAF50'; // Green glow
+setTimeout(() => gradeBox.style.boxShadow = '', 2000);
       gradeBox.focus();
       gradeBox.value = '';
       const chars = String(student.score).split('');
@@ -144,7 +145,8 @@ if (postedStudentIds.size >= approved) {
     if (iframe) {
       const doc = iframe.contentDocument || iframe.contentWindow.document;
       const body = doc.querySelector("body#tinymce");
-      if (body) {
+      if (body) {body.style.boxShadow = '0 0 6px 3px #2196F3'; // Blue glow
+      setTimeout(() => body.style.boxShadow = '', 2000);
         body.innerHTML = `<p>${student.comment}</p>`;
         body.focus();
         setTimeout(() => body.blur(), 100);
@@ -153,8 +155,14 @@ if (postedStudentIds.size >= approved) {
     await new Promise(resolve => setTimeout(resolve, 2000));
 
     // Click submit button
-    document.getElementById("comment_submit_button")?.click();
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    const submitButton = document.getElementById("comment_submit_button");
+if (submitButton) {
+  submitButton.style.boxShadow = '0 0 6px 3px #FF9800'; // Orange glow
+  setTimeout(() => submitButton.style.boxShadow = '', 2000);
+  submitButton.click();
+}
+await new Promise(resolve => setTimeout(resolve, 2000));
+
 
     // Move to next student
     document.querySelector("i.icon-arrow-right.next")?.click();
