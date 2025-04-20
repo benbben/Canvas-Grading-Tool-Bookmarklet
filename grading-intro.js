@@ -1,5 +1,5 @@
 // grading-intro.js
-// Version: v20
+// Version: v21
 // Description: Canvas SpeedGrader bookmarklet for grading 'Introduction' discussion posts using semantic rubric matching
 // Changelog:
 // - v1: Initial rubric-based grading logic
@@ -22,6 +22,7 @@
 // - v18: Adjusted sidebar dimensions to 550px width and 1000px height
 // - v19: Fixed issue where comment text used outdated score and did not include reply points
 // - v20: Regenerates feedback comment at approval time based on current override score and rubric status
+// - v21: Unified table rendering logic for all rubric items including Late and Reply rows
 
 (function () {
   console.log("[GradingTool] Initializing script...");
@@ -65,14 +66,14 @@
 
   sidebar.innerHTML = `
     <div style="display:flex; justify-content:space-between; align-items:center;">
-      <h2 style="margin:0;">Intro Grading Tool <span style='font-size:0.7em; color:#888;'>(v20)</span></h2>
+      <h2 style="margin:0;">Intro Grading Tool <span style='font-size:0.7em; color:#888;'>(v21)</span></h2>
       <button id="closeSidebar" style="font-size:16px; padding:4px 8px;">×</button>
     </div>
     <div id="status">Initializing...</div>
     <div id="posts"></div>
     <div id="rubric"></div>
     <div id="grade"></div>
-    <div style="margin-top:20px; font-size:0.8em; color:#666">Intro Rubric Version v20</div>
+    <div style="margin-top:20px; font-size:0.8em; color:#666">Intro Rubric Version v21</div>
   `;
 
   document.body.appendChild(sidebar);
@@ -184,17 +185,7 @@
         }
       ];
 
-      let rubricRows = [], rubricScore = 0;
-      criteria.forEach(c => {
-        const met = c.patterns.some(p => p.test(responseText));
-        rubricRows.push(`<tr><td>${c.label}</td><td>${met ? "✅" : "❌"}</td><td>${met ? c.points : 0}</td></tr>`);
-        rubricScore += met ? c.points : 0;
-      });
-
-      rubricRows.push(`<tr><td>Late post (after Thursday PST)</td><td>${lateIntro ? "❌" : "✅"}</td><td><input type='number' id='rubric-late' value='${lateIntro ? -2 : 0}' min='-2' max='0' style='width:40px; text-align:center;'> / -2</td></tr>`);
-
-      const replyCheck = replyPost && countWordsSmart(replyPost.message) > 5;
-      rubricRows.push(`<tr><td>Reply to peer</td><td>${replyCheck ? "✅" : "❌"}</td><td><input type='number' id='rubric-reply' value='${replyCheck ? 4 : 0}' min='0' max='4' style='width:40px; text-align:center;'> / 4</td></tr>`);
+      // Removed legacy rubricRows logic to prevent mismatch with table rendering
 
       const totalScore = Math.max(0, rubricScore);
       const rubricTable = `<h4>Rubric:</h4>
