@@ -1,11 +1,11 @@
 // grading-batch-poster.js
 // Full UI + Batch Approval + Auto Posting System for SpeedGrader
-// Version: v2.14 (Apr 20, 2025)
+// Version: v2.16 (Apr 20, 2025)
 
 (function () {
   const existing = document.getElementById("batchGraderPanel");
   if (existing) existing.remove();
-  console.log("[BatchPoster v2.14] Initializing grading tool...");
+  console.log("[BatchPoster v2.16] Initializing grading tool...");
 
   // Create the floating UI panel
   const panel = document.createElement("div");
@@ -40,7 +40,7 @@
     <div id="batchStatus" style="margin: 10px 0;">Loading student data...</div>
     <div id="studentQueue"></div>
     <button id="startPosting" style="margin-top: 12px; padding: 6px 12px;">🚀 Post All Approved</button>
-    <div style="margin-top:10px; font-size: 0.75em; color: #999">Version: v2.14</div>
+    <div style="margin-top:10px; font-size: 0.75em; color: #999">Version: v2.16</div>
   `;
 
   // Dragging logic
@@ -208,11 +208,63 @@
         }
         if (score < 2) score = 2;
 
+        const premiumPraise = [
+          "Excellent contribution! You nailed it.",
+          "Fantastic work – well articulated and insightful.",
+          "Nice job engaging with the topic and your peers.",
+          "Thoughtful and clear – really well done.",
+          "You clearly understood the material – great job.",
+          "This was a polished and well-thought-out post.",
+          "Really effective communication in this post – well done!",
+          "Well-expressed and appropriately detailed – excellent work.",
+          "Your response was both accurate and engaging.",
+          "A strong and well-written entry – keep it up!"
+        ];
+
+        const strongPraise = [
+          "Great effort! Your points were well explained.",
+          "Strong post, you demonstrated good understanding.",
+          "Terrific job staying within the guidelines and delivering quality input.",
+          "Solid contribution, both timely and relevant.",
+          "You did a great job applying the concepts here.",
+          "Strong submission – your perspective was clear and compelling.",
+          "Nice balance of detail and relevance in your response.",
+          "Excellent depth and clarity in your writing.",
+          "Your participation stood out – great work!",
+          "This post demonstrated maturity and strong comprehension."
+        ];
+
+        const encouragingPraise = [
+          "Good work! You're close to full credit.",
+          "Nice post – just a few small things to tighten up.",
+          "You’re on the right track with this submission.",
+          "Good effort – you demonstrated understanding of the topic.",
+          "Well done overall – keep building on this foundation."
+        ];
+
+        const encouragementOnly = [
+          "You're making progress – keep pushing forward.",
+          "Appreciate your effort – a bit more polish next time.",
+          "Don’t get discouraged – improvement is part of the process.",
+          "You’re almost there – keep participating actively.",
+          "Thanks for engaging – looking forward to your next post!"
+        ];
+
+        let feedbackLine = '';
+        if (score >= 8) {
+          feedbackLine =
+            score === 10 ? premiumPraise[Math.floor(Math.random() * premiumPraise.length)] :
+            score === 9 ? strongPraise[Math.floor(Math.random() * strongPraise.length)] :
+            encouragingPraise[Math.floor(Math.random() * encouragingPraise.length)];
+        } else {
+          feedbackLine = encouragementOnly[Math.floor(Math.random() * encouragementOnly.length)];
+        }
+
         const comment = [
           wc < 100 || wc > 165 ? `Your initial post was ${wc} words, which is outside the expected 100–150 word range. ` : "",
           posts.length < 2 ? "Only one post was submitted, which impacts participation. " : "",
           late ? "The initial post was made after the deadline. " : "",
-          deductions.length === 0 && score >= 9 ? "Nice work! Strong contribution this week. " : "",
+          feedbackLine,
           deductions.length > 0 ? `Your final score is ${score}/10.` : `Great job! Score: ${score}/10.`
         ].join("").trim();
 
