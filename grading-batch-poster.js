@@ -1,9 +1,9 @@
 // grading-batch-poster.js
 // Full UI + Batch Approval + Auto Posting System for SpeedGrader
-// Version: v1.9 (Apr 19, 2025)
+// Version: v2.0 (Apr 19, 2025)
 
 (function () {
-  console.log("[BatchPoster v1.9] Initializing grading tool...");
+  console.log("[BatchPoster v2.0] Initializing grading tool...");
 
   // Create the floating UI panel
   const panel = document.createElement("div");
@@ -38,7 +38,7 @@
     <div id="batchStatus" style="margin: 10px 0;">Loading student data...</div>
     <div id="studentQueue"></div>
     <button id="startPosting" style="margin-top: 12px; padding: 6px 12px;">🚀 Post All Approved</button>
-    <div style="margin-top:10px; font-size: 0.75em; color: #999">Version: v1.9</div>
+    <div style="margin-top:10px; font-size: 0.75em; color: #999">Version: v2.0</div>
   `;
 
   // Dragging logic
@@ -211,7 +211,7 @@
           deductions.length > 0 ? `Your final score is ${score}/10.` : `Great job! Score: ${score}/10.`
         ].join("").trim();
 
-        gradingQueue.push({ id: userId, name, score, comment, approved: false });
+        gradingQueue.push({ id: userId, name, score, comment, posts, approved: false });
       }
 
       document.getElementById("batchStatus").innerText = `Loaded ${gradingQueue.length} students.`;
@@ -230,6 +230,9 @@
       <div style="margin-bottom: 10px; padding: 6px; border: 1px solid #ddd;">
         <strong>${s.name}</strong> — Score: <input type="number" value="${s.score}" id="score-${i}" style="width: 40px;"> <br>
         <textarea id="comment-${i}" rows="2" style="width:100%; margin-top: 4px;">${s.comment}</textarea><br>
+        <div style="margin: 6px 0; font-size: 0.85em; background: #f9f9f9; padding: 6px; border: 1px dashed #ccc; max-height: 150px; overflow-y: auto;">
+          ${s.posts.map((p, j) => `<div style='margin-bottom:4px;'><strong>Post ${j + 1}:</strong><br>${p.message}</div>`).join('')}
+        </div>
         <button onclick="approveStudent(${i})">✅ Approve</button>
         <span id="approved-${i}" style="margin-left:10px; color: green; display: ${s.approved ? 'inline' : 'none'};">Approved</span>
       </div>
