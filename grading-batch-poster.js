@@ -1,11 +1,11 @@
 // grading-batch-poster.js
 // Full UI + Batch Approval + Auto Posting System for SpeedGrader
-// Version: v2.33 (Apr 20, 2025)
+// Version: v2.37 (Apr 20, 2025)
 
 (function () {
   const existing = document.getElementById("batchGraderPanel");
   if (existing) existing.remove();
-  console.log("[BatchPoster v2.33] Initializing grading tool...");
+  console.log("[BatchPoster v2.37] Initializing grading tool...");
 
   // Create the floating UI panel
   const panel = document.createElement("div");
@@ -40,7 +40,7 @@
     <div id="batchStatus" style="margin: 10px 0;">Loading student data...</div>
     <div id="studentQueue"></div>
     <button id="startPosting" style="margin-top: 12px; padding: 6px 12px;">🚀 Post All Approved</button>
-    <div style="margin-top:10px; font-size: 0.75em; color: #999">Version: v2.33</div>
+    <div style="margin-top:10px; font-size: 0.75em; color: #999">Version: v2.37</div>
   `;
 
   // Dragging logic
@@ -89,67 +89,78 @@
         panel.style.height = "600px";
       };
 
-      startPosting.onclick = async () => {
-        const total = gradingQueue.length;
-        const approved = gradingQueue.filter(s => s.approved).length;
-        if (approved < total) {
-          const confirmProceed = confirm(`Only ${approved} of ${total} students are approved. Do you want to continue?`);
-          if (!confirmProceed) return;
-        }
+startPosting.onclick = async () => {
+  const total = gradingQueue.length;
+  const approved = gradingQueue.filter(s => s.approved).length;
+  if (approved < total) {
+    const confirmProceed = confirm(`Only ${approved} of ${total} students are approved. Do you want to continue?`);
+    if (!confirmProceed) return;
+  }
 
-        // Resize panel for visibility
-        panel.style.width = '75vw';
+  // Minimize UI for visibility
+  document.getElementById('minimizePanel')?.click();
 
-        for (let i = 0; i < gradingQueue.length; i++) {
-          const student = gradingQueue[i];
-          if (!student.approved) {
-            document.querySelector("button.next-student-button")?.click();
-            await new Promise(resolve => setTimeout(resolve, 1500));
-            continue;
-          }
+  while (true) {
+    const url = window.location.href;
+    const match = url.match(/student_id=(\d+)/);
+    const currentId = match ? match[1] : null;
+    if (!currentId) break;
 
-          const gradeBox = document.getElementById("grading-box-extended");
-          if (gradeBox) {
-            gradeBox.focus();
-            gradeBox.value = '';
-            const chars = String(student.score).split('');
-            chars.forEach(char => {
-              gradeBox.value += char;
-              gradeBox.dispatchEvent(new Event("input", { bubbles: true }));
-            });
-            gradeBox.dispatchEvent(new Event("change", { bubbles: true }));
-            gradeBox.blur();
-          }
+    const student = gradingQueue.find(s => String(s.id) === String(currentId) && s.approved);
+    if (!student) {
+      console.log(`[BatchPoster] No approved entry for student ${currentId}. Skipping...`);
+      document.querySelector("i.icon-arrow-right.next")?.click();
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      continue;
+    }
 
-          const iframeComment = Array.from(document.querySelectorAll("iframe")).find(f => f.contentDocument?.body?.id === "tinymce");
-          if (iframeComment) {
-            const doc = iframeComment.contentDocument || iframeComment.contentWindow.document;
-            const body = doc.querySelector("body#tinymce");
-            if (body) {
-              body.innerHTML = `<p>${student.comment}</p>`;
-              body.focus();
-              setTimeout(() => body.blur(), 100);
-            }
-          }
+    console.log(`[BatchPoster] Posting for ${student.name} (ID ${student.id})`);
 
-          // Click the 'submit' button for the comment box (if it exists)
-          document.querySelector("button.submit_comment_button")?.click();
+    // Enter score
+    const gradeBox = document.getElementById("grading-box-extended");
+    if (gradeBox) {
+      gradeBox.focus();
+      gradeBox.value = '';
+      const chars = String(student.score).split('');
+      chars.forEach(char => {
+        gradeBox.value += char;
+        gradeBox.dispatchEvent(new Event("input", { bubbles: true }));
+      });
+      gradeBox.dispatchEvent(new Event("change", { bubbles: true }));
+      gradeBox.blur();
+    }
+    await new Promise(resolve => setTimeout(resolve, 2000));
 
-          // Move to next student
-          document.querySelector("button.next-student-button")?.click();
+    // Insert comment into TinyMCE
+    const iframe = Array.from(document.querySelectorAll("iframe")).find(f =>
+      f.contentDocument?.body?.id === "tinymce"
+    );
+    if (iframe) {
+      const doc = iframe.contentDocument || iframe.contentWindow.document;
+      const body = doc.querySelector("body#tinymce");
+      if (body) {
+        body.innerHTML = `<p>${student.comment}</p>`;
+        body.focus();
+        setTimeout(() => body.blur(), 100);
+      }
+    }
+    await new Promise(resolve => setTimeout(resolve, 2000));
 
-          // Wait between tasks
-          await new Promise(resolve => setTimeout(resolve, 1500));
-        }
+    // Click submit button
+    document.getElementById("comment_submit_button")?.click();
+    await new Promise(resolve => setTimeout(resolve, 2000));
 
-        alert("🎉 Posting complete!");
-        localStorage.removeItem("canvasBatchQueue");
-        gradingQueue.length = 0;
-        renderQueue();
-        localStorage.removeItem("canvasBatchQueue");
-        gradingQueue.length = 0;
-        renderQueue();
-      };
+    // Move to next student
+    document.querySelector("i.icon-arrow-right.next")?.click();
+    await new Promise(resolve => setTimeout(resolve, 2000));
+  }
+
+  alert("🎉 Posting complete!");
+  localStorage.removeItem("canvasBatchQueue");
+  gradingQueue.length = 0;
+  renderQueue();
+};
+
     }
   }, 0);
 
@@ -303,6 +314,9 @@
         ];
 
         let feedbackLine = '';
+        if (posts.length >= 3) {
+        feedbackLine = premiumPraise[Math.floor(Math.random() * premiumPraise.length)];
+        }
         if (score >= 8) {
           feedbackLine =
             score === 10 ? premiumPraise[Math.floor(Math.random() * premiumPraise.length)] :
@@ -360,7 +374,7 @@
           </div>
         </div>
         ${s.posts.length > 2 ? `
-          <div style="display: flex; gap: 1%; margin-top: 6px;"><div style="width: 15%;"></div>
+          <div style="display: flex; gap: 1%; margin-top: 6px;"><div style="width: 16%;"></div>
             <div style="width: 34%; font-size: 0.85em; background: #f9f9f9; padding: 6px; border: 1px dashed #ccc; max-height: 150px; overflow-y: auto;">
               ${s.posts[2] ? `<strong>Post 3:</strong><br>${s.posts[2].message}` : ""}
             </div>
