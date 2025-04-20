@@ -1,9 +1,9 @@
 // grading-batch-poster.js
 // Full UI + Batch Approval + Auto Posting System for SpeedGrader
-// Version: v1.5 (Apr 19, 2025)
+// Version: v1.6 (Apr 19, 2025)
 
 (function () {
-  console.log("[BatchPoster v1.5] Initializing grading tool...");
+  console.log("[BatchPoster v1.6] Initializing grading tool...");
 
   // Create the floating UI panel
   const panel = document.createElement("div");
@@ -38,7 +38,7 @@
     <div id="batchStatus" style="margin: 10px 0;">Loading student data...</div>
     <div id="studentQueue"></div>
     <button id="startPosting" style="margin-top: 12px; padding: 6px 12px;">🚀 Post All Approved</button>
-    <div style="margin-top:10px; font-size: 0.75em; color: #999">Version: v1.3</div>
+    <div style="margin-top:10px; font-size: 0.75em; color: #999">Version: v1.6</div>
   `;
 
   // Dragging logic
@@ -135,12 +135,24 @@
     return res.json();
   }
 
-  async function fetchUserName(courseId, userId) {
-    if (Object.keys(userNameMap).length === 0) {
-      try {
-        let page = 1, hasMore = true;
-        while (hasMore) {
-          const users = await fetchJSON(`/api/v1/courses/${courseId}/users?enrollment_type[]=student&per_page=100&page=${page}`);
+  async function fetchAllUserNames(courseId) {
+    try {
+      let page = 1, hasMore = true;
+      while (hasMore) {
+        const users = await fetchJSON(`/api/v1/courses/${courseId}/users?enrollment_type[]=student&per_page=100&page=${page}`);
+        if (!users.length) {
+          hasMore = false;
+          break;
+        }
+        users.forEach(u => {
+          userNameMap[u.id] = u.sortable_name || u.name || `User ${u.id}`;
+        });
+        page++;
+      }
+    } catch (err) {
+      console.warn("Failed to fetch course users:", err);
+    }
+  }/users?enrollment_type[]=student&per_page=100&page=${page}`);
           if (users.length === 0) {
             hasMore = false;
             break;
@@ -181,8 +193,9 @@
         grouped[p.user_id].push(p);
       });
 
+      await fetchAllUserNames(courseId);
       for (const [userId, posts] of Object.entries(grouped)) {
-        const name = await fetchUserName(courseId, userId);
+        const name = userNameMap[userId] || `User ${userId}`;
         posts.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
         // name now comes from fetchUserName above
         const initialPost = posts[0];
