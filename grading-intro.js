@@ -1,4 +1,13 @@
-// grading-ui.js (modified for Introduction assignment rubric with broad semantic checks)
+// grading-intro.js
+// Version: v5
+// Description: Canvas SpeedGrader bookmarklet for grading 'Introduction' discussion posts using semantic rubric matching
+// Changelog:
+// - v1: Initial rubric-based grading logic
+// - v2: Added broader pattern matching for degree/certificate detection
+// - v3: Introduced randomized instructor-style feedback comments
+// - v4: Fixed pattern loading bug, restored all rubric categories
+// - v5: Version number now shown in header and top of script; auto-incremented with each release
+
 (function () {
   console.log("[GradingTool] Initializing script...");
   let courseId, assignmentId, studentId;
@@ -38,14 +47,14 @@
 
   sidebar.innerHTML = `
     <div style="display:flex; justify-content:space-between; align-items:center;">
-      <h2 style="margin:0;">Intro Grading Tool</h2>
+      <h2 style="margin:0;">Intro Grading Tool <span style='font-size:0.7em; color:#888;'>(v5)</span></h2>
       <button id="closeSidebar" style="font-size:16px; padding:4px 8px;">×</button>
     </div>
     <div id="status">Initializing...</div>
     <div id="posts"></div>
     <div id="rubric"></div>
     <div id="grade"></div>
-    <div style="margin-top:20px; font-size:0.8em; color:#666">Intro Rubric Version v4</div>
+    <div style="margin-top:20px; font-size:0.8em; color:#666">Intro Rubric Version v5</div>
   `;
 
   document.body.appendChild(sidebar);
@@ -125,37 +134,37 @@
       const responseText = initialPost.message.toLowerCase();
 
       const criteria = [
-  {
-    label: "Why are you taking this class?",
-    patterns: [/taking.*class/, /enroll.*class/, /i.*take.*class/, /i.*signed.*up/, /require.*for.*degree/, /because.*class/],
-    points: 1
-  },
-  {
-    label: "Educational background",
-    patterns: [/i.*studied/, /i.*have.*degree/, /i.*graduated/, /education.*background/, /college.*major/, /my.*education/],
-    points: 1
-  },
-  {
-    label: "Career aspirations",
-    patterns: [/want.*be.*account/, /plan.*career/, /career.*goal/, /i.*hope.*to.*work/, /eventually.*become/, /i.*am.*pursuing.*career/],
-    points: 1
-  },
-  {
-    label: "Interests outside accounting",
-    patterns: [/when.*not.*study/, /outside.*class/, /free.*time/, /i.*enjoy/, /hobby/, /like.*to.*do/],
-    points: 1
-  },
-  {
-    label: "Work experience",
-    patterns: [/i.*work/, /worked.*as/, /job/, /employment/, /experience.*with/, /my.*career.*so.*far/],
-    points: 1
-  },
-  {
-    label: "Pursuing degree or certificate",
-    patterns: [/working.*degree/, /getting.*certificate/, /enrolled.*program/, /i.*am.*earning/, /completing.*degree/, /studying.*for.*certificate/, /earn.*degree/, /associate.*degree/, /bachelor.*degree/, /certificate.*program/, /transfer.*to.*university/],
-    points: 1
-  }
-];
+        {
+          label: "Why are you taking this class?",
+          patterns: [/taking.*class/, /enroll.*class/, /i.*take.*class/, /i.*signed.*up/, /require.*for.*degree/, /because.*class/],
+          points: 1
+        },
+        {
+          label: "Educational background",
+          patterns: [/i.*studied/, /i.*have.*degree/, /i.*graduated/, /education.*background/, /college.*major/, /my.*education/],
+          points: 1
+        },
+        {
+          label: "Career aspirations",
+          patterns: [/want.*be.*account/, /plan.*career/, /career.*goal/, /i.*hope.*to.*work/, /eventually.*become/, /i.*am.*pursuing.*career/],
+          points: 1
+        },
+        {
+          label: "Interests outside accounting",
+          patterns: [/when.*not.*study/, /outside.*class/, /free.*time/, /i.*enjoy/, /hobby/, /like.*to.*do/],
+          points: 1
+        },
+        {
+          label: "Work experience",
+          patterns: [/i.*work/, /worked.*as/, /job/, /employment/, /experience.*with/, /my.*career.*so.*far/],
+          points: 1
+        },
+        {
+          label: "Pursuing degree or certificate",
+          patterns: [/working.*degree/, /getting.*certificate/, /enrolled.*program/, /i.*am.*earning/, /completing.*degree/, /studying.*for.*certificate/, /earn.*degree/, /associate.*degree/, /bachelor.*degree/, /certificate.*program/, /transfer.*to.*university/],
+          points: 1
+        }
+      ];
 
       let rubricRows = [], rubricScore = 0;
       criteria.forEach(c => {
@@ -191,21 +200,21 @@
       document.getElementById("rubric").innerHTML = rubricTable;
 
       const greetings = [
-  "Thanks for introducing yourself!",
-  "Welcome to the class!",
-  "Glad to have you on board!",
-  "Appreciate your thoughtful intro.",
-  "Looking forward to seeing your work this quarter!",
-  "Thanks for sharing your background!",
-  "Sounds like you're bringing great experience.",
-  "Hope this class helps with your goals!",
-  "Nice to meet you virtually!",
-  "Excited to have you in the course!"
-];
-const randomGreeting = greetings[Math.floor(Math.random() * greetings.length)];
-const comment = rubricRows.filter(r => r.includes('❌')).length === 0 ?
-  `${randomGreeting} ✅ Great job addressing all parts of the introduction. Full credit earned.` :
-  `${randomGreeting} ⚠️ Some required parts are missing. Score: ${totalScore}/10.`;
+        "Thanks for introducing yourself!",
+        "Welcome to the class!",
+        "Glad to have you on board!",
+        "Appreciate your thoughtful intro.",
+        "Looking forward to seeing your work this quarter!",
+        "Thanks for sharing your background!",
+        "Sounds like you're bringing great experience.",
+        "Hope this class helps with your goals!",
+        "Nice to meet you virtually!",
+        "Excited to have you in the course!"
+      ];
+      const randomGreeting = greetings[Math.floor(Math.random() * greetings.length)];
+      const comment = rubricRows.filter(r => r.includes('❌')).length === 0 ?
+        `${randomGreeting} ✅ Great job addressing all parts of the introduction. Full credit earned.` :
+        `${randomGreeting} ⚠️ Some required parts are missing. Score: ${totalScore}/10.`;
 
       document.getElementById("grade").innerHTML = `
         <h4>Feedback:</h4>
@@ -230,39 +239,4 @@ const comment = rubricRows.filter(r => r.includes('❌')).length === 0 ?
         const iframeComment = Array.from(document.querySelectorAll("iframe")).find(f =>
           f.contentDocument?.body?.id === "tinymce"
         );
-        if (iframeComment) {
-          const doc = iframeComment.contentDocument || iframeComment.contentWindow.document;
-          const body = doc.querySelector("body#tinymce");
-          if (body) {
-            const editedComment = document.getElementById("proposedComment")?.value?.trim() || comment;
-            body.innerHTML = `<p>${editedComment}</p>`;
-            body.focus();
-            setTimeout(() => body.blur(), 100);
-          }
-        }
-      };
-
-    } catch (err) {
-      console.error("[GradingTool] loadAndRender error:", err);
-      document.getElementById("status").innerHTML = `<span style='color:red;'>❌ ${err.message}</span>`;
-    }
-  }
-
-  loadAndRender();
-
-  const observer = new MutationObserver(() => {
-    if (window.location.href !== currentUrl) {
-      const newUrl = window.location.href;
-      const newStudentMatch = newUrl.match(/student_id=(\d+)/);
-      const newStudentId = newStudentMatch ? newStudentMatch[1] : null;
-      if (newStudentId && newStudentId !== studentId) {
-        studentId = newStudentId;
-        currentUrl = newUrl;
-        document.getElementById("status").textContent = "Loading new student...";
-        loadAndRender();
-      }
-    }
-  });
-
-  observer.observe(document.body, { childList: true, subtree: true });
-})();
+        if (if
