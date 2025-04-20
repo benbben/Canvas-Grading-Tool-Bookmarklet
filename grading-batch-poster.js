@@ -1,11 +1,11 @@
 // grading-batch-poster.js
 // Full UI + Batch Approval + Auto Posting System for SpeedGrader
-// Version: v2.37 (Apr 20, 2025)
+// Version: v2.38 (Apr 20, 2025)
 
 (function () {
   const existing = document.getElementById("batchGraderPanel");
   if (existing) existing.remove();
-  console.log("[BatchPoster v2.37] Initializing grading tool...");
+  console.log("[BatchPoster v2.38] Initializing grading tool...");
 
   // Create the floating UI panel
   const panel = document.createElement("div");
@@ -40,7 +40,7 @@
     <div id="batchStatus" style="margin: 10px 0;">Loading student data...</div>
     <div id="studentQueue"></div>
     <button id="startPosting" style="margin-top: 12px; padding: 6px 12px;">🚀 Post All Approved</button>
-    <div style="margin-top:10px; font-size: 0.75em; color: #999">Version: v2.37</div>
+    <div style="margin-top:10px; font-size: 0.75em; color: #999">Version: v2.38</div>
   `;
 
   // Dragging logic
@@ -115,6 +115,12 @@ startPosting.onclick = async () => {
     }
 
     console.log(`[BatchPoster] Posting for ${student.name} (ID ${student.id})`);
+    
+    postedStudentIds.add(student.id);
+if (postedStudentIds.size >= approved) {
+  alert("🎉 All approved grades have been posted.");
+  break;
+}
 
     // Enter score
     const gradeBox = document.getElementById("grading-box-extended");
@@ -169,6 +175,7 @@ startPosting.onclick = async () => {
   const userCache = {};
   const userNameMap = {};
   const studentIds = new Set();
+  const postedStudentIds = new Set();
   let currentStudentIndex = 0;
 
   function flattenPosts(posts) {
@@ -317,7 +324,7 @@ startPosting.onclick = async () => {
         if (posts.length >= 3) {
         feedbackLine = premiumPraise[Math.floor(Math.random() * premiumPraise.length)];
         }
-        if (score >= 8) {
+        else if (score >= 8) {
           feedbackLine =
             score === 10 ? premiumPraise[Math.floor(Math.random() * premiumPraise.length)] :
             score === 9 ? strongPraise[Math.floor(Math.random() * strongPraise.length)] :
