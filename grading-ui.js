@@ -1,4 +1,4 @@
-// grading-ui.js (version v32 - Grade Persist + Blur + Reload on Student Change)
+// grading-ui.js (version v33 - Improved UI)
 (function () {
   console.log("[GradingTool] Initializing script...");
   let courseId, assignmentId, studentId;
@@ -23,16 +23,60 @@
   sidebar.style.top = "0";
   sidebar.style.left = "0";
   sidebar.style.width = "400px";
-  sidebar.style.height = "100%";
-  sidebar.style.zIndex = "9999";
-  sidebar.style.background = "#f9f9f9";
-  sidebar.style.borderRight = "2px solid #ccc";
-  sidebar.style.boxShadow = "4px 0 10px rgba(0,0,0,0.1)";
-  sidebar.style.padding = "16px";
-  sidebar.style.overflowY = "auto";
-  sidebar.style.fontFamily = "Arial, sans-serif";
-  sidebar.innerHTML = `<h2>Canvas Grading Tool</h2><div id="status">Initializing...</div><div id="posts"></div><div id="grade"></div><div style="margin-top:20px; font-size:0.8em; color:#666">Version: v32</div>`;
+sidebar.style = `
+  position: fixed;
+  top: 100px;
+  left: 100px;
+  width: 400px;
+  height: 500px;
+  background: #f9f9f9;
+  border: 2px solid #ccc;
+  box-shadow: 4px 4px 12px rgba(0,0,0,0.2);
+  z-index: 99999;
+  padding: 10px;
+  overflow: auto;
+  resize: both;
+  font-family: Arial, sans-serif;
+  cursor: move;
+`;
+
+sidebar.innerHTML = `
+  <div style="display:flex; justify-content:space-between; align-items:center;">
+    <h2 style="margin:0;">Canvas Grading Tool</h2>
+    <button id="closeSidebar" style="font-size:16px; padding:4px 8px;">×</button>
+  </div>
+  <div id="status">Initializing...</div>
+  <div id="posts"></div>
+  <div id="grade"></div>
+  <div style="margin-top:20px; font-size:0.8em; color:#666">Version: v32</div>
+`;
+
   document.body.appendChild(sidebar);
+  // Close button functionality
+document.getElementById("closeSidebar").onclick = () => sidebar.remove();
+
+// Drag functionality
+let isDragging = false, offsetX = 0, offsetY = 0;
+
+sidebar.addEventListener('mousedown', function(e) {
+  if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'BUTTON') return;
+  isDragging = true;
+  offsetX = e.clientX - sidebar.offsetLeft;
+  offsetY = e.clientY - sidebar.offsetTop;
+  sidebar.style.cursor = 'grabbing';
+});
+
+document.addEventListener('mousemove', function(e) {
+  if (!isDragging) return;
+  sidebar.style.left = (e.clientX - offsetX) + 'px';
+  sidebar.style.top = (e.clientY - offsetY) + 'px';
+});
+
+document.addEventListener('mouseup', function() {
+  isDragging = false;
+  sidebar.style.cursor = 'move';
+});
+
 
   function countWordsSmart(text) {
     if (!text) return 0;
