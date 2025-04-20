@@ -14,8 +14,8 @@
     position: fixed;
     top: 40px;
     left: 40px;
-    width: 95vw;
-    height: 95vh;
+    width: 90vw;
+    height: 90vh;
     background: #fff;
     border: 2px solid #ccc;
     z-index: 999999;
@@ -392,7 +392,7 @@ while (true) {
           </div>
         </div>
         ${s.posts.length > 2 ? `
-          <div style="display: flex; gap: 1%; margin-top: 6px;"><div style="width: 16%;"></div>
+          <div style="display: flex; gap: 1%; margin-top: 6px;"><div style="width: 15%;"></div>
             <div style="width: 34%; font-size: 0.85em; background: #f9f9f9; padding: 6px; border: 1px dashed #ccc; max-height: 150px; overflow-y: auto;">
               ${s.posts[2] ? `<strong>Post 3:</strong><br>${s.posts[2].message}` : ""}
             </div>
