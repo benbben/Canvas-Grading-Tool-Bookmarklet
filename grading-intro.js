@@ -45,7 +45,7 @@
     <div id="posts"></div>
     <div id="rubric"></div>
     <div id="grade"></div>
-    <div style="margin-top:20px; font-size:0.8em; color:#666">Intro Rubric Version2</div>
+    <div style="margin-top:20px; font-size:0.8em; color:#666">Intro Rubric Version v2</div>
   `;
 
   document.body.appendChild(sidebar);
@@ -127,32 +127,7 @@
       const criteria = [
         {
           label: "Why are you taking this class?",
-          patterns: [/taking.*class/, /enroll.*class/, /i.*take.*class/, /i.*signed.*up/, /require.*for.*degree/, /because.*class/],
-          points: 1
-        },
-        {
-          label: "Educational background",
-          patterns: [/i.*studied/, /i.*have.*degree/, /i.*graduated/, /education.*background/, /college.*major/, /my.*education/],
-          points: 1
-        },
-        {
-          label: "Career aspirations",
-          patterns: [/want.*be.*account/, /plan.*career/, /career.*goal/, /i.*hope.*to.*work/, /eventually.*become/, /i.*am.*pursuing.*career/],
-          points: 1
-        },
-        {
-          label: "Interests outside accounting",
-          patterns: [/when.*not.*study/, /outside.*class/, /free.*time/, /i.*enjoy/, /hobby/, /like.*to.*do/],
-          points: 1
-        },
-        {
-          label: "Work experience",
-          patterns: [/i.*work/, /worked.*as/, /job/, /employment/, /experience.*with/, /my.*career.*so.*far/],
-          points: 1
-        },
-        {
-          label: "Degree or certificate",
-          patterns: [/working.*degree/, /getting.*certificate/, /enrolled.*program/, /i.*am.*earning/, /completing.*degree/, /studying.*for.*certificate/],
+          patterns: [/working.*degree/, /getting.*certificate/, /enrolled.*program/, /i.*am.*earning/, /completing.*degree/, /studying.*for.*certificate/, /earn.*degree/, /associate.*degree/, /bachelor.*degree/, /certificate.*program/, /transfer.*to.*university/],
           points: 1
         }
       ];
