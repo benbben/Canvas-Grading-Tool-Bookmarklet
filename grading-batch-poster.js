@@ -1,11 +1,11 @@
 // grading-batch-poster.js
 // Full UI + Batch Approval + Auto Posting System for SpeedGrader
-// Version: v2.7 (Apr 19, 2025)
+// Version: v2.9 (Apr 20, 2025)
 
 (function () {
   const existing = document.getElementById("batchGraderPanel");
   if (existing) existing.remove();
-  console.log("[BatchPoster v2.7] Initializing grading tool...");
+  console.log("[BatchPoster v2.9] Initializing grading tool...");
 
   // Create the floating UI panel
   const panel = document.createElement("div");
@@ -40,7 +40,7 @@
     <div id="batchStatus" style="margin: 10px 0;">Loading student data...</div>
     <div id="studentQueue"></div>
     <button id="startPosting" style="margin-top: 12px; padding: 6px 12px;">🚀 Post All Approved</button>
-    <div style="margin-top:10px; font-size: 0.75em; color: #999">Version: v2.7</div>
+    <div style="margin-top:10px; font-size: 0.75em; color: #999">Version: v2.9</div>
   `;
 
   // Dragging logic
@@ -195,9 +195,6 @@
           score -= 2;
           deductions.push("Initial post word count not within range (-2)");
         }
-        
-        gradingQueue.push({ id: userId, name, score, comment, posts, rubric: internal, approved: false });
-      }
         if (posts.length < 2) {
           score -= 4;
           deductions.push("Only one post (-4)");
@@ -215,7 +212,16 @@
           deductions.length > 0 ? `Your final score is ${score}/10.` : `Great job! Score: ${score}/10.`
         ].join("").trim();
 
-        
+        const internal = `
+        <table style='border-collapse:collapse;'>
+          <tr><td style='border:1px solid #ccc;padding:4px;'>Initial Post WC</td><td style='border:1px solid #ccc;padding:4px;'>${wc}</td></tr>
+          <tr><td style='border:1px solid #ccc;padding:4px;'># of Posts</td><td style='border:1px solid #ccc;padding:4px;'>${posts.length}</td></tr>
+          <tr><td style='border:1px solid #ccc;padding:4px;'>Late?</td><td style='border:1px solid #ccc;padding:4px;'>${late ? "Yes" : "No"}</td></tr>
+          <tr><td style='border:1px solid #ccc;padding:4px;'>Deductions</td><td style='border:1px solid #ccc;padding:4px;'>${deductions.join(", ") || "None"}</td></tr>
+          <tr><td style='border:1px solid #ccc;padding:4px;'>Final Score</td><td style='border:1px solid #ccc;padding:4px;'>${score}/10</td></tr>
+        </table>`;
+
+        gradingQueue.push({ id: userId, name, score, comment, posts, rubric: internal, approved: false });
       }
 
       document.getElementById("batchStatus").innerText = `Loaded ${gradingQueue.length} students.`;
