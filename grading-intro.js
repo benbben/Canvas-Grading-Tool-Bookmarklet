@@ -1,5 +1,5 @@
 // grading-intro.js
-// Version: v5
+// Version: v6
 // Description: Canvas SpeedGrader bookmarklet for grading 'Introduction' discussion posts using semantic rubric matching
 // Changelog:
 // - v1: Initial rubric-based grading logic
@@ -7,6 +7,7 @@
 // - v3: Introduced randomized instructor-style feedback comments
 // - v4: Fixed pattern loading bug, restored all rubric categories
 // - v5: Version number now shown in header and top of script; auto-incremented with each release
+// - v6: Broadened pattern matching for educational background detection
 
 (function () {
   console.log("[GradingTool] Initializing script...");
@@ -27,9 +28,9 @@
   }
 
   const existingSidebar = document.getElementById("gradingToolSidebar");
-if (existingSidebar) existingSidebar.remove();
+  if (existingSidebar) existingSidebar.remove();
 
-const sidebar = document.createElement("div");
+  const sidebar = document.createElement("div");
   sidebar.id = "gradingToolSidebar";
   sidebar.style = `
     position: fixed;
@@ -50,14 +51,14 @@ const sidebar = document.createElement("div");
 
   sidebar.innerHTML = `
     <div style="display:flex; justify-content:space-between; align-items:center;">
-      <h2 style="margin:0;">Intro Grading Tool <span style='font-size:0.7em; color:#888;'>(v5)</span></h2>
+      <h2 style="margin:0;">Intro Grading Tool <span style='font-size:0.7em; color:#888;'>(v6)</span></h2>
       <button id="closeSidebar" style="font-size:16px; padding:4px 8px;">×</button>
     </div>
     <div id="status">Initializing...</div>
     <div id="posts"></div>
     <div id="rubric"></div>
     <div id="grade"></div>
-    <div style="margin-top:20px; font-size:0.8em; color:#666">Intro Rubric Version v5</div>
+    <div style="margin-top:20px; font-size:0.8em; color:#666">Intro Rubric Version v6</div>
   `;
 
   document.body.appendChild(sidebar);
@@ -144,7 +145,7 @@ const sidebar = document.createElement("div");
         },
         {
           label: "Educational background",
-          patterns: [/i.*studied/, /i.*have.*degree/, /i.*graduated/, /education.*background/, /college.*major/, /my.*education/],
+          patterns: [/i.*studied/, /i.*have.*degree/, /i.*graduated/, /education.*background/, /college.*major/, /my.*education/, /currently.*attending/, /enrolled.*college/, /taking.*classes/, /quarter.*here/, /semester.*here/, /school.*history/],
           points: 1
         },
         {
