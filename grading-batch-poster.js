@@ -1,11 +1,11 @@
 // grading-batch-poster.js
 // Full UI + Batch Approval + Auto Posting System for SpeedGrader
-// Version: v2.29 (Apr 20, 2025)
+// Version: v2.30 (Apr 20, 2025)
 
 (function () {
   const existing = document.getElementById("batchGraderPanel");
   if (existing) existing.remove();
-  console.log("[BatchPoster v2.29] Initializing grading tool...");
+  console.log("[BatchPoster v2.30] Initializing grading tool...");
 
   // Create the floating UI panel
   const panel = document.createElement("div");
@@ -40,7 +40,7 @@
     <div id="batchStatus" style="margin: 10px 0;">Loading student data...</div>
     <div id="studentQueue"></div>
     <button id="startPosting" style="margin-top: 12px; padding: 6px 12px;">🚀 Post All Approved</button>
-    <div style="margin-top:10px; font-size: 0.75em; color: #999">Version: v2.28</div>
+    <div style="margin-top:10px; font-size: 0.75em; color: #999">Version: v2.30</div>
   `;
 
   // Dragging logic
@@ -93,9 +93,59 @@
         const total = gradingQueue.length;
         const approved = gradingQueue.filter(s => s.approved).length;
         if (approved < total) {
-          alert(`You didn't approve ${total - approved} of ${total} students.`);
-          return;
+          const confirmProceed = confirm(`Only ${approved} of ${total} students are approved. Do you want to continue?`);
+          if (!confirmProceed) return;
         }
+
+        // Resize panel for visibility
+        panel.style.width = '75vw';
+
+        for (let i = 0; i < gradingQueue.length; i++) {
+          const student = gradingQueue[i];
+          if (!student.approved) {
+            document.querySelector("button.next-student-button")?.click();
+            await new Promise(resolve => setTimeout(resolve, 1500));
+            continue;
+          }
+
+          const gradeBox = document.getElementById("grading-box-extended");
+          if (gradeBox) {
+            gradeBox.focus();
+            gradeBox.value = '';
+            const chars = String(student.score).split('');
+            chars.forEach(char => {
+              gradeBox.value += char;
+              gradeBox.dispatchEvent(new Event("input", { bubbles: true }));
+            });
+            gradeBox.dispatchEvent(new Event("change", { bubbles: true }));
+            gradeBox.blur();
+          }
+
+          const iframeComment = Array.from(document.querySelectorAll("iframe")).find(f => f.contentDocument?.body?.id === "tinymce");
+          if (iframeComment) {
+            const doc = iframeComment.contentDocument || iframeComment.contentWindow.document;
+            const body = doc.querySelector("body#tinymce");
+            if (body) {
+              body.innerHTML = `<p>${student.comment}</p>`;
+              body.focus();
+              setTimeout(() => body.blur(), 100);
+            }
+          }
+
+          // Click the 'submit' button for the comment box (if it exists)
+          document.querySelector("button.submit_comment_button")?.click();
+
+          // Move to next student
+          document.querySelector("button.next-student-button")?.click();
+
+          // Wait between tasks
+          await new Promise(resolve => setTimeout(resolve, 1500));
+        }
+
+        alert("🎉 Posting complete!");
+        localStorage.removeItem("canvasBatchQueue");
+        gradingQueue.length = 0;
+        renderQueue();        }
         for (let i = 0; i < gradingQueue.length; i++) {
           const student = gradingQueue[i];
           if (!student.approved) continue;
