@@ -1,11 +1,11 @@
 // grading-batch-poster.js
 // Full UI + Batch Approval + Auto Posting System for SpeedGrader
-// Version: v2.26 (Apr 20, 2025)
+// Version: v2.28 (Apr 20, 2025)
 
 (function () {
   const existing = document.getElementById("batchGraderPanel");
   if (existing) existing.remove();
-  console.log("[BatchPoster v2.26] Initializing grading tool...");
+  console.log("[BatchPoster v2.28] Initializing grading tool...");
 
   // Create the floating UI panel
   const panel = document.createElement("div");
@@ -40,7 +40,7 @@
     <div id="batchStatus" style="margin: 10px 0;">Loading student data...</div>
     <div id="studentQueue"></div>
     <button id="startPosting" style="margin-top: 12px; padding: 6px 12px;">🚀 Post All Approved</button>
-    <div style="margin-top:10px; font-size: 0.75em; color: #999">Version: v2.25</div>
+    <div style="margin-top:10px; font-size: 0.75em; color: #999">Version: v2.27</div>
   `;
 
   // Dragging logic
@@ -274,7 +274,7 @@
           posts.length < 2 ? "Only one post was submitted, which impacts participation. " : "",
           late ? "The initial post was made after the deadline. " : "",
           feedbackLine,
-          deductions.length > 0 ? ` ${deductions.length > 0 ? 'Your final score is ' + score + '/10.' : ''}` : ''
+          `Your final score is ${score}/10.`
         ].join("").trim();
 
         const internal = `
@@ -318,7 +318,7 @@
         </div>
         ${s.posts.length > 2 ? `
           <div style="display: flex; gap: 1%; margin-top: 6px;">
-            <div style="width: 15%;"></div>
+            <div style="width: 15%;"></div></div>
             <div style="width: 34%; font-size: 0.85em; background: #f9f9f9; padding: 6px; border: 1px dashed #ccc; max-height: 150px; overflow-y: auto;">
               ${s.posts[2] ? `<strong>Post 3:</strong><br>${s.posts[2].message}` : ""}
             </div>
