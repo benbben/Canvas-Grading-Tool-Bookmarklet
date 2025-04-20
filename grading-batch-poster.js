@@ -100,74 +100,77 @@ startPosting.onclick = async () => {
   // Minimize UI for visibility
   document.getElementById('minimizePanel')?.click();
 
-  while (true) {
-    const url = window.location.href;
-    const match = url.match(/student_id=(\d+)/);
-    const currentId = match ? match[1] : null;
-    if (!currentId) break;
+while (true) {
+  const url = window.location.href;
+  const match = url.match(/student_id=(\d+)/);
+  const currentId = match ? match[1] : null;
+  if (!currentId) break;
 
-    const student = gradingQueue.find(s => String(s.id) === String(currentId) && s.approved);
-    if (!student) {
-      console.log(`[BatchPoster] No approved entry for student ${currentId}. Skipping...`);
-      document.querySelector("i.icon-arrow-right.next")?.click();
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      continue;
-    }
-
-    console.log(`[BatchPoster] Posting for ${student.name} (ID ${student.id})`);
-    
-    postedStudentIds.add(student.id);
-if (postedStudentIds.size >= approved) {
-  alert("🎉 All approved grades have been posted.");
-  break;
-}
-
-    // Enter score
-    const gradeBox = document.getElementById("grading-box-extended");
-    if (gradeBox) {gradeBox.style.boxShadow = '0 0 6px 3px #4CAF50'; // Green glow
-setTimeout(() => gradeBox.style.boxShadow = '', 2000);
-      gradeBox.focus();
-      gradeBox.value = '';
-      const chars = String(student.score).split('');
-      chars.forEach(char => {
-        gradeBox.value += char;
-        gradeBox.dispatchEvent(new Event("input", { bubbles: true }));
-      });
-      gradeBox.dispatchEvent(new Event("change", { bubbles: true }));
-      gradeBox.blur();
-    }
-    await new Promise(resolve => setTimeout(resolve, 2000));
-
-    // Insert comment into TinyMCE
-    const iframe = Array.from(document.querySelectorAll("iframe")).find(f =>
-      f.contentDocument?.body?.id === "tinymce"
-    );
-    if (iframe) {
-      const doc = iframe.contentDocument || iframe.contentWindow.document;
-      const body = doc.querySelector("body#tinymce");
-      if (body) {body.style.boxShadow = '0 0 6px 3px #2196F3'; // Blue glow
-      setTimeout(() => body.style.boxShadow = '', 2000);
-        body.innerHTML = `<p>${student.comment}</p>`;
-        body.focus();
-        setTimeout(() => body.blur(), 100);
-      }
-    }
-    await new Promise(resolve => setTimeout(resolve, 2000));
-
-    // Click submit button
-    const submitButton = document.getElementById("comment_submit_button");
-if (submitButton) {
-  submitButton.style.boxShadow = '0 0 6px 3px #FF9800'; // Orange glow
-  setTimeout(() => submitButton.style.boxShadow = '', 2000);
-  submitButton.click();
-}
-await new Promise(resolve => setTimeout(resolve, 2000));
-
-
-    // Move to next student
+  const student = gradingQueue.find(s => String(s.id) === String(currentId) && s.approved);
+  if (!student) {
+    console.log(`[BatchPoster] No approved entry for student ${currentId}. Skipping...`);
     document.querySelector("i.icon-arrow-right.next")?.click();
     await new Promise(resolve => setTimeout(resolve, 2000));
+    continue;
   }
+
+  console.log(`[BatchPoster] Posting for ${student.name} (ID ${student.id})`);
+
+  const gradeBox = document.getElementById("grading-box-extended");
+  if (gradeBox) {
+    gradeBox.style.boxShadow = '0 0 6px 3px #4CAF50';
+    setTimeout(() => gradeBox.style.boxShadow = '', 2000);
+    gradeBox.focus();
+    gradeBox.value = '';
+    const chars = String(student.score).split('');
+    chars.forEach(char => {
+      gradeBox.value += char;
+      gradeBox.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    gradeBox.dispatchEvent(new Event("change", { bubbles: true }));
+    gradeBox.blur();
+  }
+  await new Promise(resolve => setTimeout(resolve, 2000));
+
+  const iframe = Array.from(document.querySelectorAll("iframe")).find(f =>
+    f.contentDocument?.body?.id === "tinymce"
+  );
+  if (iframe) {
+    const doc = iframe.contentDocument || iframe.contentWindow.document;
+    const body = doc.querySelector("body#tinymce");
+    if (body) {
+      body.style.boxShadow = '0 0 6px 3px #2196F3';
+      setTimeout(() => body.style.boxShadow = '', 2000);
+      body.innerHTML = `<p>${student.comment}</p>`;
+      body.focus();
+      setTimeout(() => body.blur(), 100);
+    }
+  }
+  await new Promise(resolve => setTimeout(resolve, 2000));
+
+  const submitButton = document.getElementById("comment_submit_button");
+  if (submitButton) {
+    submitButton.style.boxShadow = '0 0 6px 3px #FF9800';
+    submitButton.focus();
+    setTimeout(() => {
+      submitButton.click();
+      submitButton.blur();
+      submitButton.style.boxShadow = '';
+    }, 300);
+  }
+  await new Promise(resolve => setTimeout(resolve, 2000));
+
+  document.querySelector("i.icon-arrow-right.next")?.click();
+  await new Promise(resolve => setTimeout(resolve, 2000));
+
+  // ✅ Only increment once we are done posting and moved forward
+  postedStudentIds.add(student.id);
+  if (postedStudentIds.size >= approved) {
+    alert("🎉 All approved grades have been posted.");
+    break;
+  }
+}
+
 
   alert("🎉 Posting complete!");
   localStorage.removeItem("canvasBatchQueue");
