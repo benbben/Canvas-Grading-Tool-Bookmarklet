@@ -1,5 +1,5 @@
 // grading-intro.js
-// Version: v6
+// Version: v7
 // Description: Canvas SpeedGrader bookmarklet for grading 'Introduction' discussion posts using semantic rubric matching
 // Changelog:
 // - v1: Initial rubric-based grading logic
@@ -8,6 +8,7 @@
 // - v4: Fixed pattern loading bug, restored all rubric categories
 // - v5: Version number now shown in header and top of script; auto-incremented with each release
 // - v6: Broadened pattern matching for educational background detection
+// - v7: Expanded logic to recognize intent to transfer as career aspiration, pre-college experience as work, and clarified degree pursuit phrasing
 
 (function () {
   console.log("[GradingTool] Initializing script...");
@@ -51,14 +52,14 @@
 
   sidebar.innerHTML = `
     <div style="display:flex; justify-content:space-between; align-items:center;">
-      <h2 style="margin:0;">Intro Grading Tool <span style='font-size:0.7em; color:#888;'>(v6)</span></h2>
+      <h2 style="margin:0;">Intro Grading Tool <span style='font-size:0.7em; color:#888;'>(v7)</span></h2>
       <button id="closeSidebar" style="font-size:16px; padding:4px 8px;">×</button>
     </div>
     <div id="status">Initializing...</div>
     <div id="posts"></div>
     <div id="rubric"></div>
     <div id="grade"></div>
-    <div style="margin-top:20px; font-size:0.8em; color:#666">Intro Rubric Version v6</div>
+    <div style="margin-top:20px; font-size:0.8em; color:#666">Intro Rubric Version v7</div>
   `;
 
   document.body.appendChild(sidebar);
@@ -150,7 +151,7 @@
         },
         {
           label: "Career aspirations",
-          patterns: [/want.*be.*account/, /plan.*career/, /career.*goal/, /i.*hope.*to.*work/, /eventually.*become/, /i.*am.*pursuing.*career/],
+          patterns: [/want.*be/, /plan.*career/, /career.*goal/, /i.*hope.*to.*work/, /eventually.*become/, /i.*am.*pursuing.*career/, /transfer.*to.*university/, /uncertain.*career/, /not.*sure.*what.*to.*do/, /decided.*change.*paths/],
           points: 1
         },
         {
@@ -160,12 +161,12 @@
         },
         {
           label: "Work experience",
-          patterns: [/i.*work/, /worked.*as/, /job/, /employment/, /experience.*with/, /my.*career.*so.*far/],
+          patterns: [/i.*work/, /worked.*as/, /job/, /employment/, /experience.*with/, /my.*career.*so.*far/, /before.*attending/, /i.*studied.*as/, /previous.*field/, /prior.*background/],
           points: 1
         },
         {
           label: "Pursuing degree or certificate",
-          patterns: [/working.*degree/, /getting.*certificate/, /enrolled.*program/, /i.*am.*earning/, /completing.*degree/, /studying.*for.*certificate/, /earn.*degree/, /associate.*degree/, /bachelor.*degree/, /certificate.*program/, /transfer.*to.*university/],
+          patterns: [/working.*degree/, /getting.*certificate/, /enrolled.*program/, /i.*am.*earning/, /completing.*degree/, /studying.*for.*certificate/, /earn.*degree/, /associate.*degree/, /bachelor.*degree/, /certificate.*program/, /transfer.*to.*university/, /currently.*pursuing/, /finish.*studies/],
           points: 1
         }
       ];
