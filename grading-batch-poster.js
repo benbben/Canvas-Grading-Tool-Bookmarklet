@@ -1,11 +1,11 @@
 // grading-batch-poster.js
 // Full UI + Batch Approval + Auto Posting System for SpeedGrader
-// Version: v2.13 (Apr 20, 2025)
+// Version: v2.14 (Apr 20, 2025)
 
 (function () {
   const existing = document.getElementById("batchGraderPanel");
   if (existing) existing.remove();
-  console.log("[BatchPoster v2.13] Initializing grading tool...");
+  console.log("[BatchPoster v2.14] Initializing grading tool...");
 
   // Create the floating UI panel
   const panel = document.createElement("div");
@@ -40,7 +40,7 @@
     <div id="batchStatus" style="margin: 10px 0;">Loading student data...</div>
     <div id="studentQueue"></div>
     <button id="startPosting" style="margin-top: 12px; padding: 6px 12px;">🚀 Post All Approved</button>
-    <div style="margin-top:10px; font-size: 0.75em; color: #999">Version: v2.13</div>
+    <div style="margin-top:10px; font-size: 0.75em; color: #999">Version: v2.14</div>
   `;
 
   // Dragging logic
@@ -212,6 +212,7 @@
           wc < 100 || wc > 165 ? `Your initial post was ${wc} words, which is outside the expected 100–150 word range. ` : "",
           posts.length < 2 ? "Only one post was submitted, which impacts participation. " : "",
           late ? "The initial post was made after the deadline. " : "",
+          deductions.length === 0 && score >= 9 ? "Nice work! Strong contribution this week. " : "",
           deductions.length > 0 ? `Your final score is ${score}/10.` : `Great job! Score: ${score}/10.`
         ].join("").trim();
 
