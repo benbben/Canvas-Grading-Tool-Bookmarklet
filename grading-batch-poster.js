@@ -230,13 +230,13 @@
 
 
 
-    } catch (err) {
-      console.error("[BatchPoster] Error building grading queue:", err);
-      const statusEl = document.getElementById("batchStatus");
-      if (statusEl) statusEl.innerText = `❌ ${err.message}`;
-    }
+} catch (err) {
   console.error("[BatchPoster] Error building grading queue:", err);
   console.error("Full error stack:", err.stack);
+  const statusEl = document.getElementById("batchStatus");
+  if (statusEl) statusEl.innerText = `❌ ${err.message}`;
+}
+
 
   }
 
