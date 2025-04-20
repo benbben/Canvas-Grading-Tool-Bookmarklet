@@ -12,8 +12,8 @@
     position: fixed;
     top: 40px;
     left: 40px;
-    width: 800px;
-    height: 90vh;
+    width: 95vw;
+    height: 95vh;
     background: #fff;
     border: 2px solid #ccc;
     z-index: 999999;
@@ -38,7 +38,7 @@
     <div id="batchStatus" style="margin: 10px 0;">Loading student data...</div>
     <div id="studentQueue"></div>
     <button id="startPosting" style="margin-top: 12px; padding: 6px 12px;">🚀 Post All Approved</button>
-    <div style="margin-top:10px; font-size: 0.75em; color: #999">Version: v1.8</div>
+    <div style="margin-top:10px; font-size: 0.75em; color: #999">Version: v1.9</div>
   `;
 
   // Dragging logic
