@@ -5,7 +5,7 @@
 (function () {
   const existing = document.getElementById("batchGraderPanel");
   if (existing) existing.remove();
-  console.log("[BatchPoster v2.91] Initializing grading tool...");
+  console.log("[BatchPoster v2.9] Initializing grading tool...");
 
   // Create the floating UI panel
   const panel = document.createElement("div");
