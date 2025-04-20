@@ -45,7 +45,7 @@
     <div id="posts"></div>
     <div id="rubric"></div>
     <div id="grade"></div>
-    <div style="margin-top:20px; font-size:0.8em; color:#666">Intro Rubric Version</div>
+    <div style="margin-top:20px; font-size:0.8em; color:#666">Intro Rubric Version2</div>
   `;
 
   document.body.appendChild(sidebar);
