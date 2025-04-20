@@ -1,5 +1,5 @@
 // grading-intro.js
-// Version: v17
+// Version: v18
 // Description: Canvas SpeedGrader bookmarklet for grading 'Introduction' discussion posts using semantic rubric matching
 // Changelog:
 // - v1: Initial rubric-based grading logic
@@ -19,6 +19,7 @@
 // - v15: Fixed join syntax bug by replacing newline with empty string
 // - v16: Made sidebar larger and added editable Late and Peer Reply criteria to rubric
 // - v17: Increased sidebar height to 1200px for full rubric visibility
+// - v18: Adjusted sidebar dimensions to 550px width and 1000px height
 
 (function () {
   console.log("[GradingTool] Initializing script...");
@@ -47,8 +48,8 @@
     position: fixed;
     top: 100px;
     left: 100px;
-    width: 525px;
-    height: 1200px;
+    width: 550px;
+    height: 1000px;
     background: #f9f9f9;
     border: 2px solid #ccc;
     box-shadow: 4px 4px 12px rgba(0,0,0,0.2);
@@ -62,14 +63,14 @@
 
   sidebar.innerHTML = `
     <div style="display:flex; justify-content:space-between; align-items:center;">
-      <h2 style="margin:0;">Intro Grading Tool <span style='font-size:0.7em; color:#888;'>(v17)</span></h2>
+      <h2 style="margin:0;">Intro Grading Tool <span style='font-size:0.7em; color:#888;'>(v18)</span></h2>
       <button id="closeSidebar" style="font-size:16px; padding:4px 8px;">×</button>
     </div>
     <div id="status">Initializing...</div>
     <div id="posts"></div>
     <div id="rubric"></div>
     <div id="grade"></div>
-    <div style="margin-top:20px; font-size:0.8em; color:#666">Intro Rubric Version v17</div>
+    <div style="margin-top:20px; font-size:0.8em; color:#666">Intro Rubric Version v18</div>
   `;
 
   document.body.appendChild(sidebar);
