@@ -1,11 +1,11 @@
 // grading-batch-poster.js
 // Full UI + Batch Approval + Auto Posting System for SpeedGrader
-// Version: v2.22 (Apr 20, 2025)
+// Version: v2.25 (Apr 20, 2025)
 
 (function () {
   const existing = document.getElementById("batchGraderPanel");
   if (existing) existing.remove();
-  console.log("[BatchPoster v2.22] Initializing grading tool...");
+  console.log("[BatchPoster v2.25] Initializing grading tool...");
 
   // Create the floating UI panel
   const panel = document.createElement("div");
@@ -40,7 +40,7 @@
     <div id="batchStatus" style="margin: 10px 0;">Loading student data...</div>
     <div id="studentQueue"></div>
     <button id="startPosting" style="margin-top: 12px; padding: 6px 12px;">🚀 Post All Approved</button>
-    <div style="margin-top:10px; font-size: 0.75em; color: #999">Version: v2.22</div>
+    <div style="margin-top:10px; font-size: 0.75em; color: #999">Version: v2.25</div>
   `;
 
   // Dragging logic
@@ -90,6 +90,12 @@
       };
 
       startPosting.onclick = async () => {
+        const total = gradingQueue.length;
+        const approved = gradingQueue.filter(s => s.approved).length;
+        if (approved < total) {
+          alert(`You didn't approve ${total - approved} of ${total} students.`);
+          return;
+        }
         for (let i = 0; i < gradingQueue.length; i++) {
           const student = gradingQueue[i];
           if (!student.approved) continue;
@@ -268,7 +274,7 @@
           posts.length < 2 ? "Only one post was submitted, which impacts participation. " : "",
           late ? "The initial post was made after the deadline. " : "",
           feedbackLine,
-          deductions.length > 0 ? `Your final score is ${score}/10.` : ''
+          deductions.length > 0 ? ` Your final score is ${score}/10.` : ''
         ].join("").trim();
 
         const internal = `
@@ -322,11 +328,11 @@
           </div>
         ` : ""}
         <div style="margin-top: 6px;">
-          <textarea id="comment-${i}" rows="2" style="width:100%;">${s.comment}</textarea>
+          <textarea id="comment-${i}" rows="2" style="width:100%;" ${s.approved ? 'disabled' : ''}>${s.comment}</textarea>
         </div>
         <div style="margin-top: 6px; display: flex; align-items: center; gap: 10px;">
-          Score: <input type="number" value="${s.score}" id="score-${i}" style="width: 40px;">
-          <button onclick="approveStudent(${i})">✅ Approve</button>
+          Score: <input type="number" value="${s.score}" id="score-${i}" style="width: 40px;" ${s.approved ? 'disabled' : ''}>
+          ${s.approved ? `<button onclick="editStudent(${i})">✏️ Edit</button>` : `<button onclick="approveStudent(${i})">✅ Approve</button>`}
           <span id="approved-${i}" style="color: green; display: ${s.approved ? 'inline' : 'none'};">Approved</span>
         </div>
       </div>
@@ -339,6 +345,12 @@
     gradingQueue[index].score = score;
     gradingQueue[index].comment = comment;
     gradingQueue[index].approved = true;
+    localStorage.setItem("canvasBatchQueue", JSON.stringify(gradingQueue));
+    renderQueue();
+  };
+
+  window.editStudent = (index) => {
+    gradingQueue[index].approved = false;
     localStorage.setItem("canvasBatchQueue", JSON.stringify(gradingQueue));
     renderQueue();
   };
