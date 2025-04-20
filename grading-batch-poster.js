@@ -1,9 +1,9 @@
 // grading-batch-poster.js
 // Full UI + Batch Approval + Auto Posting System for SpeedGrader
-// Version: v1.2 (Apr 19, 2025)
+// Version: v1.3 (Apr 19, 2025)
 
 (function () {
-  console.log("[BatchPoster v1.2] Initializing grading tool...");
+  console.log("[BatchPoster v1.3] Initializing grading tool...");
 
   // Create the floating UI panel
   const panel = document.createElement("div");
@@ -38,7 +38,7 @@
     <div id="batchStatus" style="margin: 10px 0;">Loading student data...</div>
     <div id="studentQueue"></div>
     <button id="startPosting" style="margin-top: 12px; padding: 6px 12px;">🚀 Post All Approved</button>
-    <div style="margin-top:10px; font-size: 0.75em; color: #999">Version: v1.1</div>
+    <div style="margin-top:10px; font-size: 0.75em; color: #999">Version: v1.3</div>
   `;
 
   // Dragging logic
@@ -159,7 +159,7 @@
 
       for (const [userId, posts] of Object.entries(grouped)) {
         posts.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-        const name = posts[0]?.user_display_name || posts[0]?.display_name || `User ${userId}`;
+        const name = posts[0]?.user_name || posts[0]?.user_display_name || posts[0]?.display_name || `User ${userId}`;
         const initialPost = posts[0];
         const wc = countWordsSmart(initialPost.message);
         const late = dueDate && new Date(initialPost.created_at) > dueDate;
