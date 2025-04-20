@@ -1,11 +1,11 @@
 // grading-batch-poster.js
 // Full UI + Batch Approval + Auto Posting System for SpeedGrader
-// Version: v2.20 (Apr 20, 2025)
+// Version: v2.21 (Apr 20, 2025)
 
 (function () {
   const existing = document.getElementById("batchGraderPanel");
   if (existing) existing.remove();
-  console.log("[BatchPoster v2.20] Initializing grading tool...");
+  console.log("[BatchPoster v2.21] Initializing grading tool...");
 
   // Create the floating UI panel
   const panel = document.createElement("div");
@@ -40,7 +40,7 @@
     <div id="batchStatus" style="margin: 10px 0;">Loading student data...</div>
     <div id="studentQueue"></div>
     <button id="startPosting" style="margin-top: 12px; padding: 6px 12px;">🚀 Post All Approved</button>
-    <div style="margin-top:10px; font-size: 0.75em; color: #999">Version: v2.20</div>
+    <div style="margin-top:10px; font-size: 0.75em; color: #999">Version: v2.21</div>
   `;
 
   // Dragging logic
@@ -97,6 +97,9 @@
           await new Promise(resolve => setTimeout(resolve, 1000));
         }
         alert("🎉 Posting complete!");
+        localStorage.removeItem("canvasBatchQueue");
+        gradingQueue.length = 0;
+        renderQueue();
       };
     }
   }, 0);
@@ -278,6 +281,7 @@
         </table>`;
 
         gradingQueue.push({ id: userId, name, score, comment, posts, rubric: internal, approved: false });
+        localStorage.setItem("canvasBatchQueue", JSON.stringify(gradingQueue));
       }
 
       document.getElementById("batchStatus").innerText = `Loaded ${gradingQueue.length} students.`;
@@ -333,10 +337,17 @@
     gradingQueue[index].score = score;
     gradingQueue[index].comment = comment;
     gradingQueue[index].approved = true;
+    localStorage.setItem("canvasBatchQueue", JSON.stringify(gradingQueue));
     renderQueue();
   };
 
   setTimeout(() => {
+    const saved = localStorage.getItem("canvasBatchQueue");
+    if (saved) {
+      gradingQueue.push(...JSON.parse(saved));
+      renderQueue();
+      return;
+    }
     buildGradingQueue();
   }, 0);
 
