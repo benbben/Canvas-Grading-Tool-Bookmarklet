@@ -1,5 +1,5 @@
 // grading-intro.js
-// Version: v15
+// Version: v16
 // Description: Canvas SpeedGrader bookmarklet for grading 'Introduction' discussion posts using semantic rubric matching
 // Changelog:
 // - v1: Initial rubric-based grading logic
@@ -17,6 +17,7 @@
 // - v13: Sidebar width increased to 475px and planning interactive rubric cell editing
 // - v14: Rubric rows converted to editable score inputs that dynamically update total and icons
 // - v15: Fixed join syntax bug by replacing newline with empty string
+// - v16: Made sidebar larger and added editable Late and Peer Reply criteria to rubric
 
 (function () {
   console.log("[GradingTool] Initializing script...");
@@ -45,8 +46,8 @@
     position: fixed;
     top: 100px;
     left: 100px;
-    width: 475px;
-    height: 800px;
+    width: 525px;
+    height: 900px;
     background: #f9f9f9;
     border: 2px solid #ccc;
     box-shadow: 4px 4px 12px rgba(0,0,0,0.2);
@@ -60,14 +61,14 @@
 
   sidebar.innerHTML = `
     <div style="display:flex; justify-content:space-between; align-items:center;">
-      <h2 style="margin:0;">Intro Grading Tool <span style='font-size:0.7em; color:#888;'>(v15)</span></h2>
+      <h2 style="margin:0;">Intro Grading Tool <span style='font-size:0.7em; color:#888;'>(v16)</span></h2>
       <button id="closeSidebar" style="font-size:16px; padding:4px 8px;">×</button>
     </div>
     <div id="status">Initializing...</div>
     <div id="posts"></div>
     <div id="rubric"></div>
     <div id="grade"></div>
-    <div style="margin-top:20px; font-size:0.8em; color:#666">Intro Rubric Version v15</div>
+    <div style="margin-top:20px; font-size:0.8em; color:#666">Intro Rubric Version v16</div>
   `;
 
   document.body.appendChild(sidebar);
@@ -186,18 +187,10 @@
         rubricScore += met ? c.points : 0;
       });
 
-      if (lateIntro) {
-        rubricRows.push(`<tr><td>Late post (after Thursday PST)</td><td>❌</td><td>-2</td></tr>`);
-        rubricScore -= 2;
-      }
+      rubricRows.push(`<tr><td>Late post (after Thursday PST)</td><td>${lateIntro ? "❌" : "✅"}</td><td><input type='number' id='rubric-late' value='${lateIntro ? -2 : 0}' min='-2' max='0' style='width:40px; text-align:center;'> / -2</td></tr>`);
 
       const replyCheck = replyPost && countWordsSmart(replyPost.message) > 5;
-      if (!replyCheck) {
-        rubricRows.push(`<tr><td>Reply to peer</td><td>❌</td><td>0</td></tr>`);
-      } else {
-        rubricRows.push(`<tr><td>Reply to peer</td><td>✅</td><td>4</td></tr>`);
-        rubricScore += 4;
-      }
+      rubricRows.push(`<tr><td>Reply to peer</td><td>${replyCheck ? "✅" : "❌"}</td><td><input type='number' id='rubric-reply' value='${replyCheck ? 4 : 0}' min='0' max='4' style='width:40px; text-align:center;'> / 4</td></tr>`);
 
       const totalScore = Math.max(0, rubricScore);
       const rubricTable = `<h4>Rubric:</h4>
@@ -236,8 +229,10 @@
             const val = parseInt(document.getElementById(`rubric-${j}`).value, 10);
             updatedTotal += isNaN(val) ? 0 : val;
           });
-          if (lateIntro) updatedTotal -= 2;
-          if (replyCheck) updatedTotal += 4;
+          const lateVal = parseInt(document.getElementById('rubric-late')?.value || 0, 10);
+          updatedTotal += isNaN(lateVal) ? 0 : lateVal;
+          const replyVal = parseInt(document.getElementById('rubric-reply')?.value || 0, 10);
+          updatedTotal += isNaN(replyVal) ? 0 : replyVal;
           updatedTotal = Math.max(0, updatedTotal);
           document.getElementById("rubric-total").textContent = updatedTotal;
           const overrideInput = document.getElementById("overrideScore");
