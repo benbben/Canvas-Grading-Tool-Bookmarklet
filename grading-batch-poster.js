@@ -1,9 +1,9 @@
 // grading-batch-poster.js
 // Full UI + Batch Approval + Auto Posting System for SpeedGrader
-// Version: v1.0 (Apr 19, 2025)
+// Version: v1.1 (Apr 19, 2025)
 
 (function () {
-  console.log("[BatchPoster v1.0] Initializing grading tool...");
+  console.log("[BatchPoster v1.1] Initializing grading tool...");
 
   // Create the floating UI panel
   const panel = document.createElement("div");
@@ -221,6 +221,8 @@
     renderQueue();
   };
 
-  buildGradingQueue();
+  setTimeout(() => {
+    buildGradingQueue();
+  }, 0);
 
 })();
