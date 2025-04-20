@@ -1,5 +1,5 @@
 // grading-intro.js
-// Version: v26
+// Version: v27
 // Description: Canvas SpeedGrader bookmarklet for grading 'Introduction' discussion posts using semantic rubric matching
 // Changelog:
 // - v1: Initial rubric-based grading logic
@@ -28,6 +28,7 @@
 // - v24: Fixed total score calculation by summing all rubric inputs including late and reply
 // - v25: Moved totalScore calculation after rubric is rendered to ensure input fields are in DOM
 // - v26: Fixed scope error by moving totalScore declaration before DOM injection and linking total span dynamically
+// - v27: Resolved duplicate 'scoreToUse' declaration error in Approve button logic
 
 (function () {
   console.log("[GradingTool] Initializing script...");
@@ -71,14 +72,14 @@
 
   sidebar.innerHTML = `
     <div style="display:flex; justify-content:space-between; align-items:center;">
-      <h2 style="margin:0;">Intro Grading Tool <span style='font-size:0.7em; color:#888;'>(v26)</span></h2>
+      <h2 style="margin:0;">Intro Grading Tool <span style='font-size:0.7em; color:#888;'>(v27)</span></h2>
       <button id="closeSidebar" style="font-size:16px; padding:4px 8px;">×</button>
     </div>
     <div id="status">Initializing...</div>
     <div id="posts"></div>
     <div id="rubric"></div>
     <div id="grade"></div>
-    <div style="margin-top:20px; font-size:0.8em; color:#666">Intro Rubric Version v26</div>
+    <div style="margin-top:20px; font-size:0.8em; color:#666">Intro Rubric Version v27</div>
   `;
 
   document.body.appendChild(sidebar);
@@ -304,7 +305,7 @@
 
       document.getElementById("approveBtn").onclick = () => {
         const overrideInput = document.getElementById("overrideScore");
-        const scoreToUse = overrideInput ? parseInt(overrideInput.value, 10) : totalScore;
+        const scoreToUseFinal = overrideInput ? parseInt(overrideInput.value, 10) : totalScore;
         const missingLabels = Array.from(document.querySelectorAll("#rubric table tr"))
           .filter(r => r.innerHTML.includes('❌'))
           .map(r => r.querySelector("td")?.textContent.trim())
@@ -319,7 +320,7 @@
           gradeBox.value = '';
           const overrideInput = document.getElementById("overrideScore");
         const scoreToUse = overrideInput ? parseInt(overrideInput.value, 10) : totalScore;
-        const chars = String(scoreToUse).split('');
+        const chars = String(scoreToUseFinal).split('');
           chars.forEach(char => {
             gradeBox.value += char;
             gradeBox.dispatchEvent(new Event("input", { bubbles: true }));
