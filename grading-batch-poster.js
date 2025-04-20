@@ -1,11 +1,11 @@
 // grading-batch-poster.js
 // Full UI + Batch Approval + Auto Posting System for SpeedGrader
-// Version: v2.21 (Apr 20, 2025)
+// Version: v2.22 (Apr 20, 2025)
 
 (function () {
   const existing = document.getElementById("batchGraderPanel");
   if (existing) existing.remove();
-  console.log("[BatchPoster v2.21] Initializing grading tool...");
+  console.log("[BatchPoster v2.22] Initializing grading tool...");
 
   // Create the floating UI panel
   const panel = document.createElement("div");
@@ -40,7 +40,7 @@
     <div id="batchStatus" style="margin: 10px 0;">Loading student data...</div>
     <div id="studentQueue"></div>
     <button id="startPosting" style="margin-top: 12px; padding: 6px 12px;">🚀 Post All Approved</button>
-    <div style="margin-top:10px; font-size: 0.75em; color: #999">Version: v2.21</div>
+    <div style="margin-top:10px; font-size: 0.75em; color: #999">Version: v2.22</div>
   `;
 
   // Dragging logic
@@ -321,7 +321,9 @@
             </div>
           </div>
         ` : ""}
-        <textarea id="comment-${i}" rows="2" style="width:100%; margin-top: 6px;">${s.comment}</textarea>
+        <div style="margin-top: 6px;">
+          <textarea id="comment-${i}" rows="2" style="width:100%;">${s.comment}</textarea>
+        </div>
         <div style="margin-top: 6px; display: flex; align-items: center; gap: 10px;">
           Score: <input type="number" value="${s.score}" id="score-${i}" style="width: 40px;">
           <button onclick="approveStudent(${i})">✅ Approve</button>
