@@ -1,9 +1,9 @@
 // grading-batch-poster.js
 // Full UI + Batch Approval + Auto Posting System for SpeedGrader
-// Version: v2.0 (Apr 19, 2025)
+// Version: v2.1 (Apr 19, 2025)
 
 (function () {
-  console.log("[BatchPoster v2.0] Initializing grading tool...");
+  console.log("[BatchPoster v2.1] Initializing grading tool...");
 
   // Create the floating UI panel
   const panel = document.createElement("div");
@@ -38,7 +38,7 @@
     <div id="batchStatus" style="margin: 10px 0;">Loading student data...</div>
     <div id="studentQueue"></div>
     <button id="startPosting" style="margin-top: 12px; padding: 6px 12px;">🚀 Post All Approved</button>
-    <div style="margin-top:10px; font-size: 0.75em; color: #999">Version: v2.0</div>
+    <div style="margin-top:10px; font-size: 0.75em; color: #999">Version: v2.1</div>
   `;
 
   // Dragging logic
@@ -215,7 +215,18 @@
       }
 
       document.getElementById("batchStatus").innerText = `Loaded ${gradingQueue.length} students.`;
-      renderQueue();
+      const internal = `
+        <table style='border-collapse:collapse;'>
+          <tr><td style='border:1px solid #ccc;padding:4px;'>Initial Post WC</td><td style='border:1px solid #ccc;padding:4px;'>\${wc}</td></tr>
+          <tr><td style='border:1px solid #ccc;padding:4px;'># of Posts</td><td style='border:1px solid #ccc;padding:4px;'>\${posts.length}</td></tr>
+          <tr><td style='border:1px solid #ccc;padding:4px;'>Late?</td><td style='border:1px solid #ccc;padding:4px;'>\${late ? "Yes" : "No"}</td></tr>
+          <tr><td style='border:1px solid #ccc;padding:4px;'>Deductions</td><td style='border:1px solid #ccc;padding:4px;'>\${deductions.join(", ") || "None"}</td></tr>
+          <tr><td style='border:1px solid #ccc;padding:4px;'>Final Score</td><td style='border:1px solid #ccc;padding:4px;'>\${score}/10</td></tr>
+        </table>`;
+
+      gradingQueue.push({ id: userId, name, score, comment, posts, rubric: internal, approved: false });
+
+
 
     } catch (err) {
       console.error("[BatchPoster] Error building grading queue:", err);
@@ -232,6 +243,9 @@
         <textarea id="comment-${i}" rows="2" style="width:100%; margin-top: 4px;">${s.comment}</textarea><br>
         <div style="margin: 6px 0; font-size: 0.85em; background: #f9f9f9; padding: 6px; border: 1px dashed #ccc; max-height: 150px; overflow-y: auto;">
           ${s.posts.map((p, j) => `<div style='margin-bottom:4px;'><strong>Post ${j + 1}:</strong><br>${p.message}</div>`).join('')}
+        </div>
+        <div style="margin: 6px 0; font-size: 0.8em; background: #eef; padding: 6px; border: 1px solid #99c;">
+          ${s.rubric}
         </div>
         <button onclick="approveStudent(${i})">✅ Approve</button>
         <span id="approved-${i}" style="margin-left:10px; color: green; display: ${s.approved ? 'inline' : 'none'};">Approved</span>
