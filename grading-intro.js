@@ -1,5 +1,5 @@
 // grading-intro.js
-// Version: v12
+// Version: v14
 // Description: Canvas SpeedGrader bookmarklet for grading 'Introduction' discussion posts using semantic rubric matching
 // Changelog:
 // - v1: Initial rubric-based grading logic
@@ -14,6 +14,8 @@
 // - v10: Converted override to inline editable text input and added 10 more randomized instructor comments
 // - v11: Moved score override above feedback and removed excess spacing
 // - v12: Increased sidebar width to avoid scrollbars
+// - v13: Sidebar width increased to 475px and planning interactive rubric cell editing
+// - v14: Rubric rows converted to editable score inputs that dynamically update total and icons
 
 (function () {
   console.log("[GradingTool] Initializing script...");
@@ -42,7 +44,7 @@
     position: fixed;
     top: 100px;
     left: 100px;
-    width: 440px;
+    width: 475px;
     height: 800px;
     background: #f9f9f9;
     border: 2px solid #ccc;
@@ -57,14 +59,14 @@
 
   sidebar.innerHTML = `
     <div style="display:flex; justify-content:space-between; align-items:center;">
-      <h2 style="margin:0;">Intro Grading Tool <span style='font-size:0.7em; color:#888;'>(v12)</span></h2>
+      <h2 style="margin:0;">Intro Grading Tool <span style='font-size:0.7em; color:#888;'>(v14)</span></h2>
       <button id="closeSidebar" style="font-size:16px; padding:4px 8px;">×</button>
     </div>
     <div id="status">Initializing...</div>
     <div id="posts"></div>
     <div id="rubric"></div>
     <div id="grade"></div>
-    <div style="margin-top:20px; font-size:0.8em; color:#666">Intro Rubric Version v12</div>
+    <div style="margin-top:20px; font-size:0.8em; color:#666">Intro Rubric Version v14</div>
   `;
 
   document.body.appendChild(sidebar);
@@ -197,17 +199,51 @@
       }
 
       const totalScore = Math.max(0, rubricScore);
-      const rubricTable = `
-        <h4>Rubric:</h4>
+      const rubricTable = `<h4>Rubric:</h4>
         <table style='width:100%; border-collapse:collapse;'>
           <tr><th style='border:1px solid #ccc;'>Criterion</th><th style='border:1px solid #ccc;'>Met?</th><th style='border:1px solid #ccc;'>Points</th></tr>
-          ${rubricRows.join("\n")}
-          <tr><td colspan='2' style='border:1px solid #ccc; font-weight:bold;'>Total</td><td style='border:1px solid #ccc; font-weight:bold;'>${totalScore}/10</td></tr>
+          ${criteria.map((c, i) => {
+            const met = c.patterns.some(p => p.test(responseText));
+            const value = met ? c.points : 0;
+            return `<tr>
+              <td style='border:1px solid #ccc;'>${c.label}</td>
+              <td style='border:1px solid #ccc;' id='emoji-${i}'>${met ? "✅" : "❌"}</td>
+              <td style='border:1px solid #ccc;'>
+                <input type='number' id='rubric-${i}' value='${value}' min='0' max='${c.points}' style='width:40px; text-align:center;'> / ${c.points}
+              </td>
+            </tr>`;
+          }).join("
+")}
+          <tr>
+            <td colspan='2' style='border:1px solid #ccc; font-weight:bold;'>Total</td>
+            <td style='border:1px solid #ccc; font-weight:bold;'><span id='rubric-total'>${totalScore}</span> / 10</td>
+          </tr>
         </table>`;
 
       const postSummary = studentPosts.map((p, i) => `Post ${i + 1} (${countWordsSmart(p.message)} words)`).join("<br>");
       document.getElementById("posts").innerHTML = `<h4>Summary:</h4>${postSummary}`;
       document.getElementById("rubric").innerHTML = rubricTable;
+
+      // Hook rubric inputs to live update total + icons
+      criteria.forEach((c, i) => {
+        const input = document.getElementById(`rubric-${i}`);
+        input.addEventListener('input', () => {
+          const score = Math.max(0, Math.min(Number(input.value), c.points));
+          input.value = score;
+          document.getElementById(`emoji-${i}`).textContent = score > 0 ? '✅' : '❌';
+          let updatedTotal = 0;
+          criteria.forEach((c2, j) => {
+            const val = parseInt(document.getElementById(`rubric-${j}`).value, 10);
+            updatedTotal += isNaN(val) ? 0 : val;
+          });
+          if (lateIntro) updatedTotal -= 2;
+          if (replyCheck) updatedTotal += 4;
+          updatedTotal = Math.max(0, updatedTotal);
+          document.getElementById("rubric-total").textContent = updatedTotal;
+          const overrideInput = document.getElementById("overrideScore");
+          if (overrideInput) overrideInput.value = updatedTotal;
+        });
+      });
 
       const greetings = [
         "Thanks for introducing yourself!",
