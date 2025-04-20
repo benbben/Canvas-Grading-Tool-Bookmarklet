@@ -1,5 +1,5 @@
 // grading-intro.js
-// Version: v24
+// Version: v25
 // Description: Canvas SpeedGrader bookmarklet for grading 'Introduction' discussion posts using semantic rubric matching
 // Changelog:
 // - v1: Initial rubric-based grading logic
@@ -26,6 +26,7 @@
 // - v22: Removed undefined rubricScore and rubricRows; recalculated score and labels from DOM
 // - v23: Properly rendered and counted Late and Reply rubric rows into the live table and score logic
 // - v24: Fixed total score calculation by summing all rubric inputs including late and reply
+// - v25: Moved totalScore calculation after rubric is rendered to ensure input fields are in DOM
 
 (function () {
   console.log("[GradingTool] Initializing script...");
@@ -190,17 +191,7 @@
 
       // Removed legacy rubricRows logic to prevent mismatch with table rendering
 
-      // Compute totalScore dynamically from rubric inputs
-      let totalScore = 0;
-      const allInputs = document.querySelectorAll("input[id^='rubric-']");
-      allInputs.forEach(input => {
-        const val = parseFloat(input.value);
-        totalScore += isNaN(val) ? 0 : val;
-      });
-      const lateVal = parseInt(lateIntro ? -2 : 0);
-      const replyVal = parseInt(replyPost ? 4 : 0);
-      totalScore += lateVal + replyVal;
-      totalScore = Math.max(0, totalScore);
+      
       const rubricTable = `<h4>Rubric:</h4>
         <table style='width:100%; border-collapse:collapse;'>
           <tr><th style='border:1px solid #ccc;'>Criterion</th><th style='border:1px solid #ccc;'>Met?</th><th style='border:1px solid #ccc;'>Points</th></tr>
@@ -238,6 +229,15 @@
       const postSummary = studentPosts.map((p, i) => `Post ${i + 1} (${countWordsSmart(p.message)} words)`).join("<br>");
       document.getElementById("posts").innerHTML = `<h4>Summary:</h4>${postSummary}`;
       document.getElementById("rubric").innerHTML = rubricTable;
+
+      // Now that DOM is rendered, compute total score from actual input values
+      let totalScore = 0;
+      const allInputs = document.querySelectorAll("input[id^='rubric-']");
+      allInputs.forEach(input => {
+        const val = parseFloat(input.value);
+        totalScore += isNaN(val) ? 0 : val;
+      });
+      totalScore = Math.max(0, totalScore);
 
       // Hook rubric inputs to live update total + icons
       criteria.forEach((c, i) => {
