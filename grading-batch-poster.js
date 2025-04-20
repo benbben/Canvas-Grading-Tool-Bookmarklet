@@ -140,12 +140,6 @@
 
           // Wait between tasks
           await new Promise(resolve => setTimeout(resolve, 1500));
-        }
-
-        alert("🎉 Posting complete!");
-        localStorage.removeItem("canvasBatchQueue");
-        gradingQueue.length = 0;
-        renderQueue();        }
         
         alert("🎉 Posting complete!");
         localStorage.removeItem("canvasBatchQueue");
