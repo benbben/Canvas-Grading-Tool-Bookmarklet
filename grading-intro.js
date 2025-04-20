@@ -45,7 +45,7 @@
     <div id="posts"></div>
     <div id="rubric"></div>
     <div id="grade"></div>
-    <div style="margin-top:20px; font-size:0.8em; color:#666">Intro Rubric Version v2</div>
+    <div style="margin-top:20px; font-size:0.8em; color:#666">Intro Rubric Version v3</div>
   `;
 
   document.body.appendChild(sidebar);
@@ -165,9 +165,22 @@
       document.getElementById("posts").innerHTML = `<h4>Summary:</h4>${postSummary}`;
       document.getElementById("rubric").innerHTML = rubricTable;
 
-      const comment = rubricRows.filter(r => r.includes('❌')).length === 0 ?
-        `✅ Great job addressing all parts of the introduction. Full credit earned.` :
-        `⚠️ Some required parts are missing. Score: ${totalScore}/10.`;
+      const greetings = [
+  "Thanks for introducing yourself!",
+  "Welcome to the class!",
+  "Glad to have you on board!",
+  "Appreciate your thoughtful intro.",
+  "Looking forward to seeing your work this quarter!",
+  "Thanks for sharing your background!",
+  "Sounds like you're bringing great experience.",
+  "Hope this class helps with your goals!",
+  "Nice to meet you virtually!",
+  "Excited to have you in the course!"
+];
+const randomGreeting = greetings[Math.floor(Math.random() * greetings.length)];
+const comment = rubricRows.filter(r => r.includes('❌')).length === 0 ?
+  `${randomGreeting} ✅ Great job addressing all parts of the introduction. Full credit earned.` :
+  `${randomGreeting} ⚠️ Some required parts are missing. Score: ${totalScore}/10.`;
 
       document.getElementById("grade").innerHTML = `
         <h4>Feedback:</h4>
