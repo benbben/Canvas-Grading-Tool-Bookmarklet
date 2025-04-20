@@ -1,11 +1,11 @@
 // grading-batch-poster.js
 // Full UI + Batch Approval + Auto Posting System for SpeedGrader
-// Version: v2.11 (Apr 20, 2025)
+// Version: v2.12 (Apr 20, 2025)
 
 (function () {
   const existing = document.getElementById("batchGraderPanel");
   if (existing) existing.remove();
-  console.log("[BatchPoster v2.10] Initializing grading tool...");
+  console.log("[BatchPoster v2.12] Initializing grading tool...");
 
   // Create the floating UI panel
   const panel = document.createElement("div");
@@ -40,7 +40,7 @@
     <div id="batchStatus" style="margin: 10px 0;">Loading student data...</div>
     <div id="studentQueue"></div>
     <button id="startPosting" style="margin-top: 12px; padding: 6px 12px;">🚀 Post All Approved</button>
-    <div style="margin-top:10px; font-size: 0.75em; color: #999">Version: v2.11</div>
+    <div style="margin-top:10px; font-size: 0.75em; color: #999">Version: v2.12</div>
   `;
 
   // Dragging logic
@@ -225,6 +225,7 @@
       }
 
       document.getElementById("batchStatus").innerText = `Loaded ${gradingQueue.length} students.`;
+      renderQueue();
     } catch (err) {
   const statusEl = document.getElementById("batchStatus");
   if (statusEl) statusEl.innerText = `❌ ${err.message}`;
