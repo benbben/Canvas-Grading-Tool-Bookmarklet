@@ -1,9 +1,9 @@
 // grading-batch-poster.js
 // Full UI + Batch Approval + Auto Posting System for SpeedGrader
-// Version: v1.3 (Apr 19, 2025)
+// Version: v1.4 (Apr 19, 2025)
 
 (function () {
-  console.log("[BatchPoster v1.3] Initializing grading tool...");
+  console.log("[BatchPoster v1.4] Initializing grading tool...");
 
   // Create the floating UI panel
   const panel = document.createElement("div");
@@ -101,6 +101,7 @@
 
   // State store for student data
   const gradingQueue = [];
+  const userCache = {};
   let currentStudentIndex = 0;
 
   function flattenPosts(posts) {
@@ -133,6 +134,19 @@
     return res.json();
   }
 
+  async function fetchUserName(courseId, userId) {
+    if (userCache[userId]) return userCache[userId];
+    try {
+      const user = await fetchJSON(`/api/v1/courses/${courseId}/users/${userId}`);
+      const name = user.sortable_name || user.name || `User ${userId}`;
+      userCache[userId] = name;
+      return name;
+    } catch (err) {
+      console.warn(`Failed to fetch name for user ${userId}`, err);
+      return `User ${userId}`;
+    }
+  }
+
   async function buildGradingQueue() {
     try {
       const url = window.location.href;
@@ -158,8 +172,9 @@
       });
 
       for (const [userId, posts] of Object.entries(grouped)) {
+        const name = await fetchUserName(courseId, userId);
         posts.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-        const name = posts[0]?.user_name || posts[0]?.user_display_name || posts[0]?.display_name || `User ${userId}`;
+        // name now comes from fetchUserName above
         const initialPost = posts[0];
         const wc = countWordsSmart(initialPost.message);
         const late = dueDate && new Date(initialPost.created_at) > dueDate;
