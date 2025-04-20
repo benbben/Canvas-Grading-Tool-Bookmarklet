@@ -1,5 +1,5 @@
 // grading-intro.js
-// Version: v22
+// Version: v23
 // Description: Canvas SpeedGrader bookmarklet for grading 'Introduction' discussion posts using semantic rubric matching
 // Changelog:
 // - v1: Initial rubric-based grading logic
@@ -24,6 +24,7 @@
 // - v20: Regenerates feedback comment at approval time based on current override score and rubric status
 // - v21: Unified table rendering logic for all rubric items including Late and Reply rows
 // - v22: Removed undefined rubricScore and rubricRows; recalculated score and labels from DOM
+// - v23: Properly rendered and counted Late and Reply rubric rows into the live table and score logic
 
 (function () {
   console.log("[GradingTool] Initializing script...");
@@ -67,14 +68,14 @@
 
   sidebar.innerHTML = `
     <div style="display:flex; justify-content:space-between; align-items:center;">
-      <h2 style="margin:0;">Intro Grading Tool <span style='font-size:0.7em; color:#888;'>(v22)</span></h2>
+      <h2 style="margin:0;">Intro Grading Tool <span style='font-size:0.7em; color:#888;'>(v23)</span></h2>
       <button id="closeSidebar" style="font-size:16px; padding:4px 8px;">×</button>
     </div>
     <div id="status">Initializing...</div>
     <div id="posts"></div>
     <div id="rubric"></div>
     <div id="grade"></div>
-    <div style="margin-top:20px; font-size:0.8em; color:#666">Intro Rubric Version v22</div>
+    <div style="margin-top:20px; font-size:0.8em; color:#666">Intro Rubric Version v23</div>
   `;
 
   document.body.appendChild(sidebar);
@@ -212,6 +213,20 @@
               </td>
             </tr>`;
           }).join("")}
+          <tr>
+            <td style='border:1px solid #ccc;'>Late post (after Thursday PST)</td>
+            <td style='border:1px solid #ccc;' id='emoji-late'>${lateIntro ? "❌" : "✅"}</td>
+            <td style='border:1px solid #ccc;'>
+              <input type='number' id='rubric-late' value='${lateIntro ? -2 : 0}' min='-2' max='0' style='width:40px; text-align:center;'> / -2
+            </td>
+          </tr>
+          <tr>
+            <td style='border:1px solid #ccc;'>Reply to peer</td>
+            <td style='border:1px solid #ccc;' id='emoji-reply'>${replyPost ? "✅" : "❌"}</td>
+            <td style='border:1px solid #ccc;'>
+              <input type='number' id='rubric-reply' value='${replyPost ? 4 : 0}' min='0' max='4' style='width:40px; text-align:center;'> / 4
+            </td>
+          </tr>
           <tr>
             <td colspan='2' style='border:1px solid #ccc; font-weight:bold;'>Total</td>
             <td style='border:1px solid #ccc; font-weight:bold;'><span id='rubric-total'>${totalScore}</span> / 10</td>
