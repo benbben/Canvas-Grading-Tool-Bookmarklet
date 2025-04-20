@@ -1,4 +1,4 @@
-// grading-ui.js (version v34 - Improved UI)
+// grading-ui.js (version v35 - Praise Logic Added)
 (function () {
   console.log("[GradingTool] Initializing script...");
   let courseId, assignmentId, studentId;
@@ -19,64 +19,56 @@
 
   const sidebar = document.createElement("div");
   sidebar.id = "gradingToolSidebar";
-  sidebar.style.position = "fixed";
-  sidebar.style.top = "0";
-  sidebar.style.left = "0";
-  sidebar.style.width = "400px";
-sidebar.style = `
-  position: fixed;
-  top: 100px;
-  left: 100px;
-  width: 400px;
-  height: 800px;
-  background: #f9f9f9;
-  border: 2px solid #ccc;
-  box-shadow: 4px 4px 12px rgba(0,0,0,0.2);
-  z-index: 99999;
-  padding: 10px;
-  overflow: auto;
-  resize: both;
-  font-family: Arial, sans-serif;
-  cursor: move;
-`;
+  sidebar.style = `
+    position: fixed;
+    top: 100px;
+    left: 100px;
+    width: 400px;
+    height: 800px;
+    background: #f9f9f9;
+    border: 2px solid #ccc;
+    box-shadow: 4px 4px 12px rgba(0,0,0,0.2);
+    z-index: 99999;
+    padding: 10px;
+    overflow: auto;
+    resize: both;
+    font-family: Arial, sans-serif;
+    cursor: move;
+  `;
 
-sidebar.innerHTML = `
-  <div style="display:flex; justify-content:space-between; align-items:center;">
-    <h2 style="margin:0;">Canvas Grading Tool</h2>
-    <button id="closeSidebar" style="font-size:16px; padding:4px 8px;">×</button>
-  </div>
-  <div id="status">Initializing...</div>
-  <div id="posts"></div>
-  <div id="grade"></div>
-  <div style="margin-top:20px; font-size:0.8em; color:#666">Version: v34</div>
-`;
+  sidebar.innerHTML = `
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <h2 style="margin:0;">Canvas Grading Tool</h2>
+      <button id="closeSidebar" style="font-size:16px; padding:4px 8px;">×</button>
+    </div>
+    <div id="status">Initializing...</div>
+    <div id="posts"></div>
+    <div id="grade"></div>
+    <div style="margin-top:20px; font-size:0.8em; color:#666">Version: v35</div>
+  `;
 
   document.body.appendChild(sidebar);
-  // Close button functionality
-document.getElementById("closeSidebar").onclick = () => sidebar.remove();
+  document.getElementById("closeSidebar").onclick = () => sidebar.remove();
 
-// Drag functionality
-let isDragging = false, offsetX = 0, offsetY = 0;
+  let isDragging = false, offsetX = 0, offsetY = 0;
+  sidebar.addEventListener('mousedown', function(e) {
+    if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'BUTTON') return;
+    isDragging = true;
+    offsetX = e.clientX - sidebar.offsetLeft;
+    offsetY = e.clientY - sidebar.offsetTop;
+    sidebar.style.cursor = 'grabbing';
+  });
 
-sidebar.addEventListener('mousedown', function(e) {
-  if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'BUTTON') return;
-  isDragging = true;
-  offsetX = e.clientX - sidebar.offsetLeft;
-  offsetY = e.clientY - sidebar.offsetTop;
-  sidebar.style.cursor = 'grabbing';
-});
+  document.addEventListener('mousemove', function(e) {
+    if (!isDragging) return;
+    sidebar.style.left = (e.clientX - offsetX) + 'px';
+    sidebar.style.top = (e.clientY - offsetY) + 'px';
+  });
 
-document.addEventListener('mousemove', function(e) {
-  if (!isDragging) return;
-  sidebar.style.left = (e.clientX - offsetX) + 'px';
-  sidebar.style.top = (e.clientY - offsetY) + 'px';
-});
-
-document.addEventListener('mouseup', function() {
-  isDragging = false;
-  sidebar.style.cursor = 'move';
-});
-
+  document.addEventListener('mouseup', function() {
+    isDragging = false;
+    sidebar.style.cursor = 'move';
+  });
 
   function countWordsSmart(text) {
     if (!text) return 0;
@@ -152,6 +144,65 @@ document.addEventListener('mouseup', function() {
       }
       if (score < 2) score = 2;
 
+      const premiumPraise = [
+        "Excellent contribution! You nailed it.",
+        "Fantastic work – well articulated and insightful.",
+        "Nice job engaging with the topic and your peers.",
+        "Thoughtful and clear – really well done.",
+        "You clearly understood the material – great job.",
+        "This was a polished and well-thought-out post.",
+        "Really effective communication in this post – well done!",
+        "Well-expressed and appropriately detailed – excellent work.",
+        "Your response was both accurate and engaging.",
+        "A strong and well-written entry – keep it up!"
+      ];
+
+      const strongPraise = [
+        "Great effort! Your points were well explained.",
+        "Strong post, you demonstrated good understanding.",
+        "Terrific job staying within the guidelines and delivering quality input.",
+        "Solid contribution, both timely and relevant.",
+        "You did a great job applying the concepts here.",
+        "Strong submission – your perspective was clear and compelling.",
+        "Nice balance of detail and relevance in your response.",
+        "Excellent depth and clarity in your writing.",
+        "Your participation stood out – great work!",
+        "This post demonstrated maturity and strong comprehension."
+      ];
+
+      const encouragingPraise = [
+        "Good work! You're close to full credit.",
+        "Nice post – just a few small things to tighten up.",
+        "You’re on the right track with this submission.",
+        "Good effort – you demonstrated understanding of the topic.",
+        "Well done overall – keep building on this foundation."
+      ];
+
+      const encouragementOnly = [
+        "You're making progress – keep pushing forward.",
+        "Appreciate your effort – a bit more polish next time.",
+        "Don’t get discouraged – improvement is part of the process.",
+        "You’re almost there – keep participating actively.",
+        "Thanks for engaging – looking forward to your next post!"
+      ];
+
+      let feedbackLine = '';
+      if (score >= 8) {
+        feedbackLine =
+          score === 10 ? premiumPraise[Math.floor(Math.random() * premiumPraise.length)] :
+          score === 9 ? strongPraise[Math.floor(Math.random() * strongPraise.length)] :
+          encouragingPraise[Math.floor(Math.random() * encouragingPraise.length)];
+      } else {
+        feedbackLine = encouragementOnly[Math.floor(Math.random() * encouragementOnly.length)];
+      }
+
+      const comment = [
+        initialWordCount < 100 || initialWordCount > 165 ? `Your initial post was ${initialWordCount} words, which is outside the 100–150 range. ` : "",
+        numPosts < 2 ? "Only one post was submitted, which impacts participation. " : "",
+        late ? "The initial post was made after the deadline. " : "",
+        `${feedbackLine} Score: ${score}/10.`
+      ].join("").trim();
+
       const internal = `<h4>Internal Reference:</h4>
         <table style='border-collapse:collapse;'>
           <tr><td style='border:1px solid #ccc;padding:4px;'>Initial Post WC</td><td style='border:1px solid #ccc;padding:4px;'>${initialWordCount}</td></tr>
@@ -160,13 +211,6 @@ document.addEventListener('mouseup', function() {
           <tr><td style='border:1px solid #ccc;padding:4px;'>Deductions</td><td style='border:1px solid #ccc;padding:4px;'>${deductions.join(", ") || "None"}</td></tr>
           <tr><td style='border:1px solid #ccc;padding:4px;'>Final Score</td><td style='border:1px solid #ccc;padding:4px;'>${score}/10</td></tr>
         </table>`;
-
-      const comment = [
-        initialWordCount < 100 || initialWordCount > 165 ? `Your initial post was ${initialWordCount} words, which is outside the 100–150 range. ` : "",
-        numPosts < 2 ? "Only one post was submitted, which impacts participation. " : "",
-        late ? "The initial post was made after the deadline. " : "",
-        deductions.length > 0 ? `Your final score is ${score}/10.` : `Great job! Score: ${score}/10.`
-      ].join("").trim();
 
       document.getElementById("grade").innerHTML = `
         ${internal}<br><br>
@@ -187,8 +231,6 @@ document.addEventListener('mouseup', function() {
           });
           gradeBox.dispatchEvent(new Event("change", { bubbles: true }));
           gradeBox.blur();
-
-          // Simulate tabbing out to confirm grade
           const container = document.getElementById("grade_container");
           if (container) container.click();
         }
@@ -202,7 +244,6 @@ document.addEventListener('mouseup', function() {
           if (body) {
             const editedComment = document.getElementById("proposedComment")?.value?.trim() || comment;
             body.innerHTML = `<p>${editedComment}</p>`;
-            // Simulate focus and blur to trigger save
             body.focus();
             setTimeout(() => body.blur(), 100);
           }
