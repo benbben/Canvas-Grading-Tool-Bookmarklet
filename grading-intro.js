@@ -1,5 +1,5 @@
 // grading-intro.js
-// Version: v8
+// Version: v9
 // Description: Canvas SpeedGrader bookmarklet for grading 'Introduction' discussion posts using semantic rubric matching
 // Changelog:
 // - v1: Initial rubric-based grading logic
@@ -10,6 +10,7 @@
 // - v6: Broadened pattern matching for educational background detection
 // - v7: Expanded logic to recognize intent to transfer as career aspiration, pre-college experience as work, and clarified degree pursuit phrasing
 // - v8: Broadened career aspiration matching and improved feedback comment to show which rubric items were missing
+// - v9: Added override input for grade prior to approval
 
 (function () {
   console.log("[GradingTool] Initializing script...");
@@ -53,14 +54,14 @@
 
   sidebar.innerHTML = `
     <div style="display:flex; justify-content:space-between; align-items:center;">
-      <h2 style="margin:0;">Intro Grading Tool <span style='font-size:0.7em; color:#888;'>(v8)</span></h2>
+      <h2 style="margin:0;">Intro Grading Tool <span style='font-size:0.7em; color:#888;'>(v9)</span></h2>
       <button id="closeSidebar" style="font-size:16px; padding:4px 8px;">×</button>
     </div>
     <div id="status">Initializing...</div>
     <div id="posts"></div>
     <div id="rubric"></div>
     <div id="grade"></div>
-    <div style="margin-top:20px; font-size:0.8em; color:#666">Intro Rubric Version v8</div>
+    <div style="margin-top:20px; font-size:0.8em; color:#666">Intro Rubric Version v9</div>
   `;
 
   document.body.appendChild(sidebar);
@@ -226,6 +227,8 @@
       document.getElementById("grade").innerHTML = `
         <h4>Feedback:</h4>
         <textarea rows="4" style="width:100%;" id="proposedComment">${comment}</textarea><br><br>
+        <label><strong>Override Score:</strong></label><br>
+        <input id="overrideScore" type="number" min="0" max="10" value="${totalScore}" style="width:60px; margin-top:4px;" /><br><br><br><br>
         <button id="approveBtn">✅ Approve & Fill Grade</button>
       `;
 
@@ -234,7 +237,9 @@
         if (gradeBox) {
           gradeBox.focus();
           gradeBox.value = '';
-          const chars = String(totalScore).split('');
+          const overrideInput = document.getElementById("overrideScore");
+        const scoreToUse = overrideInput ? parseInt(overrideInput.value, 10) : totalScore;
+        const chars = String(scoreToUse).split('');
           chars.forEach(char => {
             gradeBox.value += char;
             gradeBox.dispatchEvent(new Event("input", { bubbles: true }));
