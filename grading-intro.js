@@ -26,7 +26,10 @@
     return;
   }
 
-  const sidebar = document.createElement("div");
+  const existingSidebar = document.getElementById("gradingToolSidebar");
+if (existingSidebar) existingSidebar.remove();
+
+const sidebar = document.createElement("div");
   sidebar.id = "gradingToolSidebar";
   sidebar.style = `
     position: fixed;
@@ -239,4 +242,39 @@
         const iframeComment = Array.from(document.querySelectorAll("iframe")).find(f =>
           f.contentDocument?.body?.id === "tinymce"
         );
-        if (if
+        if (iframeComment) {
+          const doc = iframeComment.contentDocument || iframeComment.contentWindow.document;
+          const body = doc.querySelector("body#tinymce");
+          if (body) {
+            const editedComment = document.getElementById("proposedComment")?.value?.trim() || comment;
+            body.innerHTML = `<p>${editedComment}</p>`;
+            body.focus();
+            setTimeout(() => body.blur(), 100);
+          }
+        }
+      };
+
+    } catch (err) {
+      console.error("[GradingTool] loadAndRender error:", err);
+      document.getElementById("status").innerHTML = `<span style='color:red;'>❌ ${err.message}</span>`;
+    }
+  }
+
+  loadAndRender();
+
+  const observer = new MutationObserver(() => {
+    if (window.location.href !== currentUrl) {
+      const newUrl = window.location.href;
+      const newStudentMatch = newUrl.match(/student_id=(\d+)/);
+      const newStudentId = newStudentMatch ? newStudentMatch[1] : null;
+      if (newStudentId && newStudentId !== studentId) {
+        studentId = newStudentId;
+        currentUrl = newUrl;
+        document.getElementById("status").textContent = "Loading new student...";
+        loadAndRender();
+      }
+    }
+  });
+
+  observer.observe(document.body, { childList: true, subtree: true });
+})();
