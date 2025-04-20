@@ -162,7 +162,7 @@ document.addEventListener('mouseup', function() {
         </table>`;
 
       const comment = [
-        initialWordCount < 100 || initialWordCount > 165 ? `Your initial post was ${initialWordCount} words, which is outside the 100–165 range. ` : "",
+        initialWordCount < 100 || initialWordCount > 165 ? `Your initial post was ${initialWordCount} words, which is outside the 100–150 range. ` : "",
         numPosts < 2 ? "Only one post was submitted, which impacts participation. " : "",
         late ? "The initial post was made after the deadline. " : "",
         deductions.length > 0 ? `Your final score is ${score}/10.` : `Great job! Score: ${score}/10.`
