@@ -1,5 +1,5 @@
 // grading-intro.js
-// Version: v7
+// Version: v8
 // Description: Canvas SpeedGrader bookmarklet for grading 'Introduction' discussion posts using semantic rubric matching
 // Changelog:
 // - v1: Initial rubric-based grading logic
@@ -9,6 +9,7 @@
 // - v5: Version number now shown in header and top of script; auto-incremented with each release
 // - v6: Broadened pattern matching for educational background detection
 // - v7: Expanded logic to recognize intent to transfer as career aspiration, pre-college experience as work, and clarified degree pursuit phrasing
+// - v8: Broadened career aspiration matching and improved feedback comment to show which rubric items were missing
 
 (function () {
   console.log("[GradingTool] Initializing script...");
@@ -52,14 +53,14 @@
 
   sidebar.innerHTML = `
     <div style="display:flex; justify-content:space-between; align-items:center;">
-      <h2 style="margin:0;">Intro Grading Tool <span style='font-size:0.7em; color:#888;'>(v7)</span></h2>
+      <h2 style="margin:0;">Intro Grading Tool <span style='font-size:0.7em; color:#888;'>(v8)</span></h2>
       <button id="closeSidebar" style="font-size:16px; padding:4px 8px;">×</button>
     </div>
     <div id="status">Initializing...</div>
     <div id="posts"></div>
     <div id="rubric"></div>
     <div id="grade"></div>
-    <div style="margin-top:20px; font-size:0.8em; color:#666">Intro Rubric Version v7</div>
+    <div style="margin-top:20px; font-size:0.8em; color:#666">Intro Rubric Version v8</div>
   `;
 
   document.body.appendChild(sidebar);
@@ -151,7 +152,7 @@
         },
         {
           label: "Career aspirations",
-          patterns: [/want.*be/, /plan.*career/, /career.*goal/, /i.*hope.*to.*work/, /eventually.*become/, /i.*am.*pursuing.*career/, /transfer.*to.*university/, /uncertain.*career/, /not.*sure.*what.*to.*do/, /decided.*change.*paths/],
+          patterns: [/want.*be/, /plan.*career/, /career.*goal/, /i.*hope.*to.*work/, /eventually.*become/, /i.*am.*pursuing.*career/, /transfer.*to.*university/, /uncertain.*career/, /not.*sure.*what.*to.*do/, /decided.*change.*paths/, /my.*aspiration/, /hope.*to.*be/, /goal.*is.*to.*become/, /i.*aspire.*to.*be/, /manager.*in.*/],
           points: 1
         },
         {
@@ -217,9 +218,10 @@
         "Excited to have you in the course!"
       ];
       const randomGreeting = greetings[Math.floor(Math.random() * greetings.length)];
-      const comment = rubricRows.filter(r => r.includes('❌')).length === 0 ?
+      const missingLabels = rubricRows.filter(r => r.includes('❌')).map(r => r.match(/<td>(.*?)<\/td>/)?.[1]).filter(Boolean);
+      const comment = missingLabels.length === 0 ?
         `${randomGreeting} ✅ Great job addressing all parts of the introduction. Full credit earned.` :
-        `${randomGreeting} ⚠️ Some required parts are missing. Score: ${totalScore}/10.`;
+        `${randomGreeting} ⚠️ Your post was missing some required parts: ${missingLabels.join(', ')}. Score: ${totalScore}/10.`;
 
       document.getElementById("grade").innerHTML = `
         <h4>Feedback:</h4>
