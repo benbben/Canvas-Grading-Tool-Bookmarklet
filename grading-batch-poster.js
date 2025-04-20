@@ -1,11 +1,11 @@
 // grading-batch-poster.js
 // Full UI + Batch Approval + Auto Posting System for SpeedGrader
-// Version: v2.12 (Apr 20, 2025)
+// Version: v2.13 (Apr 20, 2025)
 
 (function () {
   const existing = document.getElementById("batchGraderPanel");
   if (existing) existing.remove();
-  console.log("[BatchPoster v2.12] Initializing grading tool...");
+  console.log("[BatchPoster v2.13] Initializing grading tool...");
 
   // Create the floating UI panel
   const panel = document.createElement("div");
@@ -40,7 +40,7 @@
     <div id="batchStatus" style="margin: 10px 0;">Loading student data...</div>
     <div id="studentQueue"></div>
     <button id="startPosting" style="margin-top: 12px; padding: 6px 12px;">🚀 Post All Approved</button>
-    <div style="margin-top:10px; font-size: 0.75em; color: #999">Version: v2.12</div>
+    <div style="margin-top:10px; font-size: 0.75em; color: #999">Version: v2.13</div>
   `;
 
   // Dragging logic
@@ -105,6 +105,7 @@
   const gradingQueue = [];
   const userCache = {};
   const userNameMap = {};
+  const studentIds = new Set();
   let currentStudentIndex = 0;
 
   function flattenPosts(posts) {
@@ -147,8 +148,9 @@
           break;
         }
         users.forEach(u => {
-          userNameMap[u.id] = u.sortable_name || u.name || `User ${u.id}`;
-        });
+        studentIds.add(u.id);
+        userNameMap[u.id] = u.sortable_name || u.name || `User ${u.id}`;
+      });
         page++;
       }
     } catch (err) {
@@ -183,6 +185,7 @@
 
       await fetchAllUserNames(courseId);
       for (const [userId, posts] of Object.entries(grouped)) {
+        if (!studentIds.has(Number(userId))) continue;
         const name = userNameMap[userId] || `User ${userId}`;
         posts.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
         const initialPost = posts[0];
