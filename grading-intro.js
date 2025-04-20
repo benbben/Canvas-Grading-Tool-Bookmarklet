@@ -1,5 +1,5 @@
 // grading-intro.js
-// Version: v10
+// Version: v11
 // Description: Canvas SpeedGrader bookmarklet for grading 'Introduction' discussion posts using semantic rubric matching
 // Changelog:
 // - v1: Initial rubric-based grading logic
@@ -12,6 +12,7 @@
 // - v8: Broadened career aspiration matching and improved feedback comment to show which rubric items were missing
 // - v9: Added override input for grade prior to approval
 // - v10: Converted override to inline editable text input and added 10 more randomized instructor comments
+// - v11: Moved score override above feedback and removed excess spacing
 
 (function () {
   console.log("[GradingTool] Initializing script...");
@@ -55,14 +56,14 @@
 
   sidebar.innerHTML = `
     <div style="display:flex; justify-content:space-between; align-items:center;">
-      <h2 style="margin:0;">Intro Grading Tool <span style='font-size:0.7em; color:#888;'>(v10)</span></h2>
+      <h2 style="margin:0;">Intro Grading Tool <span style='font-size:0.7em; color:#888;'>(v11)</span></h2>
       <button id="closeSidebar" style="font-size:16px; padding:4px 8px;">×</button>
     </div>
     <div id="status">Initializing...</div>
     <div id="posts"></div>
     <div id="rubric"></div>
     <div id="grade"></div>
-    <div style="margin-top:20px; font-size:0.8em; color:#666">Intro Rubric Version v10</div>
+    <div style="margin-top:20px; font-size:0.8em; color:#666">Intro Rubric Version v11</div>
   `;
 
   document.body.appendChild(sidebar);
@@ -236,9 +237,9 @@
         `${randomGreeting} ⚠️ Your post was missing some required parts: ${missingLabels.join(', ')}. Score: ${totalScore}/10.`;
 
       document.getElementById("grade").innerHTML = `
+        <div style="margin-bottom: 10px;"><strong>Score:</strong> <input id="overrideScore" type="text" value="${totalScore}" style="width:40px; text-align:center; font-weight:bold; margin-left:5px;" /> / 10</div>
         <h4>Feedback:</h4>
         <textarea rows="4" style="width:100%;" id="proposedComment">${comment}</textarea><br><br>
-        <div style="margin-top: 10px;"><strong>Score:</strong> <input id="overrideScore" type="text" value="${totalScore}" style="width:40px; text-align:center; font-weight:bold; margin-left:5px;" /> / 10</div><br><br><br><br>
         <button id="approveBtn">✅ Approve & Fill Grade</button>
       `;
 
