@@ -1,11 +1,11 @@
 // grading-batch-poster.js
 // Full UI + Batch Approval + Auto Posting System for SpeedGrader
-// Version: v2.5 (Apr 19, 2025)
+// Version: v2.6 (Apr 19, 2025)
 
 (function () {
   const existing = document.getElementById("batchGraderPanel");
   if (existing) existing.remove();
-  console.log("[BatchPoster v2.5] Initializing grading tool...");
+  console.log("[BatchPoster v2.6] Initializing grading tool...");
 
   // Create the floating UI panel
   const panel = document.createElement("div");
@@ -40,7 +40,7 @@
     <div id="batchStatus" style="margin: 10px 0;">Loading student data...</div>
     <div id="studentQueue"></div>
     <button id="startPosting" style="margin-top: 12px; padding: 6px 12px;">🚀 Post All Approved</button>
-    <div style="margin-top:10px; font-size: 0.75em; color: #999">Version: v2.5</div>
+    <div style="margin-top:10px; font-size: 0.75em; color: #999">Version: v2.6</div>
   `;
 
   // Dragging logic
@@ -222,19 +222,7 @@
         </table>`;
 
         gradingQueue.push({ id: userId, name, score, comment, posts, rubric: internal, approved: false });
-        const name = userNameMap[userId] || `User ${userId}`;
-        posts.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-        // name now comes from fetchUserName above
-        const initialPost = posts[0];
-        const wc = countWordsSmart(initialPost.message);
-        const late = dueDate && new Date(initialPost.created_at) > dueDate;
-
-        let score = 10;
-        const deductions = [];
-        if (wc < 100 || wc > 165) {
-          score -= 2;
-          deductions.push("Initial post word count not within range (-2)");
-        }
+      }
         if (posts.length < 2) {
           score -= 4;
           deductions.push("Only one post (-4)");
