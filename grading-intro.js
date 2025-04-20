@@ -1,5 +1,5 @@
 // grading-intro.js
-// Version: v18
+// Version: v19
 // Description: Canvas SpeedGrader bookmarklet for grading 'Introduction' discussion posts using semantic rubric matching
 // Changelog:
 // - v1: Initial rubric-based grading logic
@@ -20,6 +20,7 @@
 // - v16: Made sidebar larger and added editable Late and Peer Reply criteria to rubric
 // - v17: Increased sidebar height to 1200px for full rubric visibility
 // - v18: Adjusted sidebar dimensions to 550px width and 1000px height
+// - v19: Fixed issue where comment text used outdated score and did not include reply points
 
 (function () {
   console.log("[GradingTool] Initializing script...");
@@ -63,14 +64,14 @@
 
   sidebar.innerHTML = `
     <div style="display:flex; justify-content:space-between; align-items:center;">
-      <h2 style="margin:0;">Intro Grading Tool <span style='font-size:0.7em; color:#888;'>(v18)</span></h2>
+      <h2 style="margin:0;">Intro Grading Tool <span style='font-size:0.7em; color:#888;'>(v19)</span></h2>
       <button id="closeSidebar" style="font-size:16px; padding:4px 8px;">×</button>
     </div>
     <div id="status">Initializing...</div>
     <div id="posts"></div>
     <div id="rubric"></div>
     <div id="grade"></div>
-    <div style="margin-top:20px; font-size:0.8em; color:#666">Intro Rubric Version v18</div>
+    <div style="margin-top:20px; font-size:0.8em; color:#666">Intro Rubric Version v19</div>
   `;
 
   document.body.appendChild(sidebar);
@@ -266,9 +267,10 @@
       ];
       const randomGreeting = greetings[Math.floor(Math.random() * greetings.length)];
       const missingLabels = rubricRows.filter(r => r.includes('❌')).map(r => r.match(/<td>(.*?)<\/td>/)?.[1]).filter(Boolean);
+      const liveTotal = parseInt(document.getElementById("overrideScore")?.value || 0, 10);
       const comment = missingLabels.length === 0 ?
         `${randomGreeting} ✅ Great job addressing all parts of the introduction. Full credit earned.` :
-        `${randomGreeting} ⚠️ Your post was missing some required parts: ${missingLabels.join(', ')}. Score: ${totalScore}/10.`;
+        `${randomGreeting} ⚠️ Your post was missing some required parts: ${missingLabels.join(', ')}. Score: ${liveTotal}/10.`;
 
       document.getElementById("grade").innerHTML = `
         <div style="margin-bottom: 10px;"><strong>Score:</strong> <input id="overrideScore" type="text" value="${totalScore}" style="width:40px; text-align:center; font-weight:bold; margin-left:5px;" /> / 10</div>
