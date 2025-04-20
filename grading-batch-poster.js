@@ -1,11 +1,11 @@
 // grading-batch-poster.js
 // Full UI + Batch Approval + Auto Posting System for SpeedGrader
-// Version: v2.9.1 (Apr 20, 2025)
+// Version: v2.10 (Apr 20, 2025)
 
 (function () {
   const existing = document.getElementById("batchGraderPanel");
   if (existing) existing.remove();
-  console.log("[BatchPoster v2.9] Initializing grading tool...");
+  console.log("[BatchPoster v2.10] Initializing grading tool...");
 
   // Create the floating UI panel
   const panel = document.createElement("div");
@@ -225,12 +225,7 @@
       }
 
       document.getElementById("batchStatus").innerText = `Loaded ${gradingQueue.length} students.`;
-
-      
-
-
-
-} catch (err) {
+    } catch (err) {
   const statusEl = document.getElementById("batchStatus");
   if (statusEl) statusEl.innerText = `❌ ${err.message}`;
 }
