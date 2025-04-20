@@ -1,5 +1,5 @@
 // grading-intro.js
-// Version: v19
+// Version: v20
 // Description: Canvas SpeedGrader bookmarklet for grading 'Introduction' discussion posts using semantic rubric matching
 // Changelog:
 // - v1: Initial rubric-based grading logic
@@ -21,6 +21,7 @@
 // - v17: Increased sidebar height to 1200px for full rubric visibility
 // - v18: Adjusted sidebar dimensions to 550px width and 1000px height
 // - v19: Fixed issue where comment text used outdated score and did not include reply points
+// - v20: Regenerates feedback comment at approval time based on current override score and rubric status
 
 (function () {
   console.log("[GradingTool] Initializing script...");
@@ -64,14 +65,14 @@
 
   sidebar.innerHTML = `
     <div style="display:flex; justify-content:space-between; align-items:center;">
-      <h2 style="margin:0;">Intro Grading Tool <span style='font-size:0.7em; color:#888;'>(v19)</span></h2>
+      <h2 style="margin:0;">Intro Grading Tool <span style='font-size:0.7em; color:#888;'>(v20)</span></h2>
       <button id="closeSidebar" style="font-size:16px; padding:4px 8px;">×</button>
     </div>
     <div id="status">Initializing...</div>
     <div id="posts"></div>
     <div id="rubric"></div>
     <div id="grade"></div>
-    <div style="margin-top:20px; font-size:0.8em; color:#666">Intro Rubric Version v19</div>
+    <div style="margin-top:20px; font-size:0.8em; color:#666">Intro Rubric Version v20</div>
   `;
 
   document.body.appendChild(sidebar);
@@ -280,6 +281,16 @@
       `;
 
       document.getElementById("approveBtn").onclick = () => {
+        const overrideInput = document.getElementById("overrideScore");
+        const scoreToUse = overrideInput ? parseInt(overrideInput.value, 10) : totalScore;
+        const missingLabels = Array.from(document.querySelectorAll("#rubric table tr"))
+          .filter(r => r.innerHTML.includes('❌'))
+          .map(r => r.querySelector("td")?.textContent.trim())
+          .filter(Boolean);
+        const updatedComment = missingLabels.length === 0 ?
+          `${randomGreeting} ✅ Great job addressing all parts of the introduction. Full credit earned.` :
+          `${randomGreeting} ⚠️ Your post was missing some required parts: ${missingLabels.join(', ')}. Score: ${scoreToUse}/10.`;
+        document.getElementById("proposedComment").value = updatedComment;
         const gradeBox = document.getElementById("grading-box-extended");
         if (gradeBox) {
           gradeBox.focus();
