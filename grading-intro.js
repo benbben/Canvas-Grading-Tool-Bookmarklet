@@ -1,5 +1,5 @@
 // grading-intro.js
-// Version: v25
+// Version: v26
 // Description: Canvas SpeedGrader bookmarklet for grading 'Introduction' discussion posts using semantic rubric matching
 // Changelog:
 // - v1: Initial rubric-based grading logic
@@ -27,6 +27,7 @@
 // - v23: Properly rendered and counted Late and Reply rubric rows into the live table and score logic
 // - v24: Fixed total score calculation by summing all rubric inputs including late and reply
 // - v25: Moved totalScore calculation after rubric is rendered to ensure input fields are in DOM
+// - v26: Fixed scope error by moving totalScore declaration before DOM injection and linking total span dynamically
 
 (function () {
   console.log("[GradingTool] Initializing script...");
@@ -70,14 +71,14 @@
 
   sidebar.innerHTML = `
     <div style="display:flex; justify-content:space-between; align-items:center;">
-      <h2 style="margin:0;">Intro Grading Tool <span style='font-size:0.7em; color:#888;'>(v24)</span></h2>
+      <h2 style="margin:0;">Intro Grading Tool <span style='font-size:0.7em; color:#888;'>(v26)</span></h2>
       <button id="closeSidebar" style="font-size:16px; padding:4px 8px;">×</button>
     </div>
     <div id="status">Initializing...</div>
     <div id="posts"></div>
     <div id="rubric"></div>
     <div id="grade"></div>
-    <div style="margin-top:20px; font-size:0.8em; color:#666">Intro Rubric Version v24</div>
+    <div style="margin-top:20px; font-size:0.8em; color:#666">Intro Rubric Version v26</div>
   `;
 
   document.body.appendChild(sidebar);
@@ -222,7 +223,7 @@
           </tr>
           <tr>
             <td colspan='2' style='border:1px solid #ccc; font-weight:bold;'>Total</td>
-            <td style='border:1px solid #ccc; font-weight:bold;'><span id='rubric-total'>${totalScore}</span> / 10</td>
+            <td style='border:1px solid #ccc; font-weight:bold;'><span id='rubric-total'></span> / 10</td>
           </tr>
         </table>`;
 
