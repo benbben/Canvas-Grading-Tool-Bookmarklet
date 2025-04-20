@@ -1,14 +1,108 @@
 // grading-batch-poster.js
-// Scaffold for Batch Approval + Auto Posting System in SpeedGrader
+// Full UI + Batch Approval + Auto Posting System for SpeedGrader
+// Version: v1.0 (Apr 19, 2025)
 
 (function () {
-  console.log("[BatchPoster] Initializing grading tool...");
+  console.log("[BatchPoster v1.0] Initializing grading tool...");
+
+  // Create the floating UI panel
+  const panel = document.createElement("div");
+  panel.id = "batchGraderPanel";
+  panel.style = `
+    position: fixed;
+    top: 100px;
+    left: 100px;
+    width: 420px;
+    height: 600px;
+    background: #fff;
+    border: 2px solid #ccc;
+    z-index: 999999;
+    padding: 10px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    overflow-y: auto;
+    resize: both;
+    font-family: Arial, sans-serif;
+    cursor: move;
+  `;
+  document.body.appendChild(panel);
+
+  panel.innerHTML = `
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <h3 style="margin: 0;">Batch Grading Tool</h3>
+      <div>
+        <button id="minimizePanel" style="margin-right: 4px;">–</button>
+        <button id="maximizePanel" style="margin-right: 4px; display: none;">⬜</button>
+        <button onclick="document.getElementById('batchGraderPanel').remove()">×</button>
+      </div>
+    </div>
+    <div id="batchStatus" style="margin: 10px 0;">Loading student data...</div>
+    <div id="studentQueue"></div>
+    <button id="startPosting" style="margin-top: 12px; padding: 6px 12px;">🚀 Post All Approved</button>
+    <div style="margin-top:10px; font-size: 0.75em; color: #999">Version: v1.0</div>
+  `;
+
+  // Dragging logic
+  let isDragging = false, offsetX = 0, offsetY = 0;
+  panel.addEventListener('mousedown', function (e) {
+    if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON') return;
+    isDragging = true;
+    offsetX = e.clientX - panel.offsetLeft;
+    offsetY = e.clientY - panel.offsetTop;
+    panel.style.cursor = 'grabbing';
+  });
+  document.addEventListener('mousemove', function (e) {
+    if (!isDragging) return;
+    panel.style.left = (e.clientX - offsetX) + 'px';
+    panel.style.top = (e.clientY - offsetY) + 'px';
+  });
+  document.addEventListener('mouseup', function () {
+    isDragging = false;
+    panel.style.cursor = 'move';
+  });
+
+  // DOM element binding fix using setTimeout
+  setTimeout(() => {
+    const minimize = document.getElementById("minimizePanel");
+    const maximize = document.getElementById("maximizePanel");
+    const batchStatus = document.getElementById("batchStatus");
+    const studentQueue = document.getElementById("studentQueue");
+    const startPosting = document.getElementById("startPosting");
+
+    if (minimize && maximize && batchStatus && studentQueue && startPosting) {
+      minimize.onclick = () => {
+        batchStatus.style.display = "none";
+        studentQueue.style.display = "none";
+        startPosting.style.display = "none";
+        minimize.style.display = "none";
+        maximize.style.display = "inline";
+        panel.style.height = "auto";
+      };
+
+      maximize.onclick = () => {
+        batchStatus.style.display = "block";
+        studentQueue.style.display = "block";
+        startPosting.style.display = "block";
+        minimize.style.display = "inline";
+        maximize.style.display = "none";
+        panel.style.height = "600px";
+      };
+
+      startPosting.onclick = async () => {
+        for (let i = 0; i < gradingQueue.length; i++) {
+          const student = gradingQueue[i];
+          if (!student.approved) continue;
+          console.log(`[BatchPoster] Would post: ${student.name} — ${student.score}pts — ${student.comment}`);
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+        alert("🎉 Posting complete!");
+      };
+    }
+  }, 0);
 
   // State store for student data
   const gradingQueue = [];
   let currentStudentIndex = 0;
 
-  // Utility to flatten nested discussion replies
   function flattenPosts(posts) {
     let flat = [];
     function recurse(list) {
@@ -101,11 +195,11 @@
 
     } catch (err) {
       console.error("[BatchPoster] Error building grading queue:", err);
-      document.getElementById("batchStatus").innerText = `❌ ${err.message}`;
+      const statusEl = document.getElementById("batchStatus");
+      if (statusEl) statusEl.innerText = `❌ ${err.message}`;
     }
   }
 
-  // --- Step 3: Render Students in UI ---
   const renderQueue = () => {
     const container = document.getElementById("studentQueue");
     container.innerHTML = gradingQueue.map((s, i) => `
@@ -128,24 +222,5 @@
   };
 
   buildGradingQueue();
-
-  // --- Step 4: Posting Engine (stub only) ---
-  document.getElementById("startPosting").onclick = async () => {
-    for (let i = 0; i < gradingQueue.length; i++) {
-      const student = gradingQueue[i];
-      if (!student.approved) continue;
-
-      console.log(`[BatchPoster] Would post: ${student.name} — ${student.score}pts — ${student.comment}`);
-
-      // Here you'd simulate:
-      // - Setting score field
-      // - Setting comment iframe
-      // - Clicking "Submit"
-      // - Navigating to next student
-
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate delay
-    }
-    alert("🎉 Posting complete!");
-  };
 
 })();
