@@ -28,7 +28,7 @@ sidebar.style = `
   top: 100px;
   left: 100px;
   width: 400px;
-  height: 500px;
+  height: 800px;
   background: #f9f9f9;
   border: 2px solid #ccc;
   box-shadow: 4px 4px 12px rgba(0,0,0,0.2);
@@ -48,7 +48,7 @@ sidebar.innerHTML = `
   <div id="status">Initializing...</div>
   <div id="posts"></div>
   <div id="grade"></div>
-  <div style="margin-top:20px; font-size:0.8em; color:#666">Version: v32</div>
+  <div style="margin-top:20px; font-size:0.8em; color:#666">Version: v33</div>
 `;
 
   document.body.appendChild(sidebar);
