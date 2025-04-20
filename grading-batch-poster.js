@@ -1,6 +1,6 @@
 // grading-batch-poster.js
 // Full UI + Batch Approval + Auto Posting System for SpeedGrader
-// Version: v2.10 (Apr 20, 2025)
+// Version: v2.11 (Apr 20, 2025)
 
 (function () {
   const existing = document.getElementById("batchGraderPanel");
@@ -40,7 +40,7 @@
     <div id="batchStatus" style="margin: 10px 0;">Loading student data...</div>
     <div id="studentQueue"></div>
     <button id="startPosting" style="margin-top: 12px; padding: 6px 12px;">🚀 Post All Approved</button>
-    <div style="margin-top:10px; font-size: 0.75em; color: #999">Version: v2.9</div>
+    <div style="margin-top:10px; font-size: 0.75em; color: #999">Version: v2.11</div>
   `;
 
   // Dragging logic
