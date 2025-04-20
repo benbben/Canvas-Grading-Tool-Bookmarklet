@@ -1,4 +1,4 @@
-// grading-ui.js (version v33 - Improved UI)
+// grading-ui.js (version v34 - Improved UI)
 (function () {
   console.log("[GradingTool] Initializing script...");
   let courseId, assignmentId, studentId;
@@ -48,7 +48,7 @@ sidebar.innerHTML = `
   <div id="status">Initializing...</div>
   <div id="posts"></div>
   <div id="grade"></div>
-  <div style="margin-top:20px; font-size:0.8em; color:#666">Version: v33</div>
+  <div style="margin-top:20px; font-size:0.8em; color:#666">Version: v34</div>
 `;
 
   document.body.appendChild(sidebar);
@@ -140,7 +140,7 @@ document.addEventListener('mouseup', function() {
       let deductions = [];
       if (initialWordCount < 100 || initialWordCount > 165) {
         score -= 2;
-        deductions.push("Word count not within 100–165 (-2)");
+        deductions.push("Word count not within 100–150 (-2)");
       }
       if (numPosts < 2) {
         score -= 4;
@@ -200,7 +200,8 @@ document.addEventListener('mouseup', function() {
           const doc = iframeComment.contentDocument || iframeComment.contentWindow.document;
           const body = doc.querySelector("body#tinymce");
           if (body) {
-            body.innerHTML = `<p>${comment}</p>`;
+            const editedComment = document.getElementById("proposedComment")?.value?.trim() || comment;
+            body.innerHTML = `<p>${editedComment}</p>`;
             // Simulate focus and blur to trigger save
             body.focus();
             setTimeout(() => body.blur(), 100);
