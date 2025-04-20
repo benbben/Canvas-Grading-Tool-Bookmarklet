@@ -1,11 +1,11 @@
 // grading-batch-poster.js
 // Full UI + Batch Approval + Auto Posting System for SpeedGrader
-// Version: v2.17 (Apr 20, 2025)
+// Version: v2.18 (Apr 20, 2025)
 
 (function () {
   const existing = document.getElementById("batchGraderPanel");
   if (existing) existing.remove();
-  console.log("[BatchPoster v2.17] Initializing grading tool...");
+  console.log("[BatchPoster v2.18] Initializing grading tool...");
 
   // Create the floating UI panel
   const panel = document.createElement("div");
@@ -40,7 +40,7 @@
     <div id="batchStatus" style="margin: 10px 0;">Loading student data...</div>
     <div id="studentQueue"></div>
     <button id="startPosting" style="margin-top: 12px; padding: 6px 12px;">🚀 Post All Approved</button>
-    <div style="margin-top:10px; font-size: 0.75em; color: #999">Version: v2.17</div>
+    <div style="margin-top:10px; font-size: 0.75em; color: #999">Version: v2.18</div>
   `;
 
   // Dragging logic
@@ -294,18 +294,38 @@
     const container = document.getElementById("studentQueue");
     container.innerHTML = gradingQueue.map((s, i) => `
       <div style="margin-bottom: 10px; padding: 6px; border: 1px solid #ddd;">
-        <strong>${s.name}</strong> — Score: <input type="number" value="${s.score}" id="score-${i}" style="width: 40px;"> <br>
-        <textarea id="comment-${i}" rows="2" style="width:100%; margin-top: 4px;">${s.comment}</textarea><br>
-        <div style="margin: 6px 0; font-size: 0.85em; background: #f9f9f9; padding: 6px; border: 1px dashed #ccc; max-height: 150px; overflow-y: auto;">
-          ${s.posts.map((p, j) => `<div style='margin-bottom:4px;'><strong>Post ${j + 1}:</strong><br>${p.message}</div>`).join('')}
+        <strong>${s.name}</strong><br>
+        <div style="display: flex; gap: 1%; margin-top: 6px;">
+          <div style="width: 15%; font-size: 0.8em; background: #eef; padding: 6px; border: 1px solid #99c;">
+            ${s.rubric}
+          </div>
+          <div style="width: 34%; font-size: 0.85em; background: #f9f9f9; padding: 6px; border: 1px dashed #ccc; max-height: 150px; overflow-y: auto;">
+            ${s.posts[0] ? `<strong>Post 1:</strong><br>${s.posts[0].message}` : ""}
+          </div>
+          <div style="width: 34%; font-size: 0.85em; background: #f9f9f9; padding: 6px; border: 1px dashed #ccc; max-height: 150px; overflow-y: auto;">
+            ${s.posts[1] ? `<strong>Post 2:</strong><br>${s.posts[1].message}` : ""}
+          </div>
         </div>
-        <div style="margin: 6px 0; font-size: 0.8em; background: #eef; padding: 6px; border: 1px solid #99c;">
-          ${s.rubric}
+        ${s.posts.length > 2 ? `
+          <div style="display: flex; gap: 1%; margin-top: 6px;">
+            <div style="width: 15%;"></div>
+            <div style="width: 34%; font-size: 0.85em; background: #f9f9f9; padding: 6px; border: 1px dashed #ccc; max-height: 150px; overflow-y: auto;">
+              ${s.posts[2] ? `<strong>Post 3:</strong><br>${s.posts[2].message}` : ""}
+            </div>
+            <div style="width: 34%; font-size: 0.85em; background: #f9f9f9; padding: 6px; border: 1px dashed #ccc; max-height: 150px; overflow-y: auto;">
+              ${s.posts[3] ? `<strong>Post 4:</strong><br>${s.posts[3].message}` : ""}
+            </div>
+          </div>
+        ` : ""}
+        <div style="margin-top: 6px; display: flex; align-items: center; gap: 10px;">
+          Score: <input type="number" value="${s.score}" id="score-${i}" style="width: 40px;">
+          <button onclick="approveStudent(${i})">✅ Approve</button>
+          <span id="approved-${i}" style="color: green; display: ${s.approved ? 'inline' : 'none'};">Approved</span>
         </div>
-        <button onclick="approveStudent(${i})">✅ Approve</button>
-        <span id="approved-${i}" style="margin-left:10px; color: green; display: ${s.approved ? 'inline' : 'none'};">Approved</span>
+        <textarea id="comment-${i}" rows="2" style="width:100%; margin-top: 4px;">${s.comment}</textarea>
       </div>
     `).join("");
+  };
   };
 
   window.approveStudent = (index) => {
