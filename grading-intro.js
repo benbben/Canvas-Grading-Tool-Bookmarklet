@@ -1,4 +1,4 @@
-// grading-ui.js (modified for Introduction assignment rubric with rubric table)
+// grading-ui.js (modified for Introduction assignment rubric with broad semantic checks)
 (function () {
   console.log("[GradingTool] Initializing script...");
   let courseId, assignmentId, studentId;
@@ -123,18 +123,43 @@
       const lateIntro = dueDate && pstCutoff > new Date(dueDate);
 
       const responseText = initialPost.message.toLowerCase();
+
       const criteria = [
-        { label: "Why are you taking this class?", keyword: "taking this class", points: 1 },
-        { label: "Educational background", keyword: "education", points: 1 },
-        { label: "Career aspirations", keyword: "career", points: 1 },
-        { label: "Interests outside accounting", keyword: "when i'm not studying", points: 1 },
-        { label: "Work experience", keyword: "work experience", points: 1 },
-        { label: "Degree or certificate", keyword: "degree" || "certificate", points: 1 }
+        {
+          label: "Why are you taking this class?",
+          patterns: [/taking.*class/, /enroll.*class/, /i.*take.*class/, /i.*signed.*up/, /require.*for.*degree/, /because.*class/],
+          points: 1
+        },
+        {
+          label: "Educational background",
+          patterns: [/i.*studied/, /i.*have.*degree/, /i.*graduated/, /education.*background/, /college.*major/, /my.*education/],
+          points: 1
+        },
+        {
+          label: "Career aspirations",
+          patterns: [/want.*be.*account/, /plan.*career/, /career.*goal/, /i.*hope.*to.*work/, /eventually.*become/, /i.*am.*pursuing.*career/],
+          points: 1
+        },
+        {
+          label: "Interests outside accounting",
+          patterns: [/when.*not.*study/, /outside.*class/, /free.*time/, /i.*enjoy/, /hobby/, /like.*to.*do/],
+          points: 1
+        },
+        {
+          label: "Work experience",
+          patterns: [/i.*work/, /worked.*as/, /job/, /employment/, /experience.*with/, /my.*career.*so.*far/],
+          points: 1
+        },
+        {
+          label: "Degree or certificate",
+          patterns: [/working.*degree/, /getting.*certificate/, /enrolled.*program/, /i.*am.*earning/, /completing.*degree/, /studying.*for.*certificate/],
+          points: 1
+        }
       ];
 
       let rubricRows = [], rubricScore = 0;
       criteria.forEach(c => {
-        const met = responseText.includes(c.keyword);
+        const met = c.patterns.some(p => p.test(responseText));
         rubricRows.push(`<tr><td>${c.label}</td><td>${met ? "✅" : "❌"}</td><td>${met ? c.points : 0}</td></tr>`);
         rubricScore += met ? c.points : 0;
       });
