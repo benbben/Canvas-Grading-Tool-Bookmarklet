@@ -1,11 +1,13 @@
 // grading-batch-poster.js
 // Full UI + Batch Approval + Auto Posting System for SpeedGrader
-// Version: v2.39 (Apr 20, 2025)
+// Version: v2.40 (Apr 20, 2025)
 
 (function () {
+  localStorage.removeItem("canvasBatchQueue"); // ✅ Clear cache at the beginning
+
   const existing = document.getElementById("batchGraderPanel");
   if (existing) existing.remove();
-  console.log("[BatchPoster v2.39] Initializing grading tool...");
+  console.log("[BatchPoster v2.40] Initializing grading tool...");
 
   // Create the floating UI panel
   const panel = document.createElement("div");
@@ -29,18 +31,21 @@
   document.body.appendChild(panel);
 
   panel.innerHTML = `
+<div style="position: sticky; top: 0; background: white; z-index: 1000; padding-bottom: 4px; border-bottom: 1px solid #ccc;">
     <div style="display: flex; justify-content: space-between; align-items: center;">
       <h3 style="margin: 0;">Batch Grading Tool</h3>
       <div>
+        <button id="approveAll" style="margin-right: 6px;">✅ Approve All</button>
+        <button id="startPosting" style="margin-top: 12px; padding: 6px 12px;">🚀 Post All Approved</button>
         <button id="minimizePanel" style="margin-right: 4px;">–</button>
         <button id="maximizePanel" style="margin-right: 4px; display: none;">⬜</button>
         <button onclick="document.getElementById('batchGraderPanel').remove()">×</button>
       </div>
     </div>
+   </div>
     <div id="batchStatus" style="margin: 10px 0;">Loading student data...</div>
     <div id="studentQueue"></div>
-    <button id="startPosting" style="margin-top: 12px; padding: 6px 12px;">🚀 Post All Approved</button>
-    <div style="margin-top:10px; font-size: 0.75em; color: #999">Version: v2.39</div>
+    <div style="margin-top:10px; font-size: 0.75em; color: #999">Version: v2.40</div>
   `;
 
   // Dragging logic
@@ -69,6 +74,7 @@
     const batchStatus = document.getElementById("batchStatus");
     const studentQueue = document.getElementById("studentQueue");
     const startPosting = document.getElementById("startPosting");
+    const approveAll = document.getElementById("approveAll");
 
     if (minimize && maximize && batchStatus && studentQueue && startPosting) {
       minimize.onclick = () => {
@@ -175,6 +181,19 @@ while (true) {
   alert("🎉 Posting complete!");
   localStorage.removeItem("canvasBatchQueue");
   gradingQueue.length = 0;
+  renderQueue();
+};
+approveAll.onclick = () => {
+  gradingQueue.forEach((s, i) => {
+    s.approved = true;
+    const scoreInput = document.getElementById(`score-${i}`);
+    const commentInput = document.getElementById(`comment-${i}`);
+    if (scoreInput && commentInput) {
+      s.score = parseFloat(scoreInput.value);
+      s.comment = commentInput.value;
+    }
+  });
+  localStorage.setItem("canvasBatchQueue", JSON.stringify(gradingQueue));
   renderQueue();
 };
 
