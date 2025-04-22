@@ -273,8 +273,8 @@ approveAll.onclick = () => {
   }
 
   async function buildGradingQueue() {
-    const minWords = Math.max(50, parseInt(document.getElementById("minWords")?.value || "100"));
-    const maxWords = Math.min(300, parseInt(document.getElementById("maxWords")?.value || "165"));
+    const minWords = parseInt(document.getElementById("minWords")?.value || "100");
+    const maxWords = parseInt(document.getElementById("maxWords")?.value || "165");
     try {
       const url = window.location.href;
       const courseMatch = url.match(/courses\/(\d+)/);
