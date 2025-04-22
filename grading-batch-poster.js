@@ -1,15 +1,14 @@
 // grading-batch-poster.js
 // Full UI + Batch Approval + Auto Posting System for SpeedGrader
-// Version: v2.40 (Apr 20, 2025)
+// Version: v2.41 (Apr 22, 2025)
 
 (function () {
-  localStorage.removeItem("canvasBatchQueue"); // ✅ Clear cache at the beginning
+  localStorage.removeItem("canvasBatchQueue");
 
   const existing = document.getElementById("batchGraderPanel");
   if (existing) existing.remove();
-  console.log("[BatchPoster v2.40] Initializing grading tool...");
+  console.log("[BatchPoster v2.41] Initializing grading tool...");
 
-  // Create the floating UI panel
   const panel = document.createElement("div");
   panel.id = "batchGraderPanel";
   panel.style = `
@@ -31,23 +30,29 @@
   document.body.appendChild(panel);
 
   panel.innerHTML = `
-<div style="position: sticky; top: 0; background: white; z-index: 1000; padding-bottom: 4px; border-bottom: 1px solid #ccc;">
-    <div style="display: flex; justify-content: space-between; align-items: center;">
-      <h3 style="margin: 0;">Batch Grading Tool</h3>
-      <div>
-        <button id="approveAll" style="margin-right: 6px;">✅ Approve All</button>
-        <button id="startPosting" style="margin-top: 12px; padding: 6px 12px;">🚀 Post All Approved</button>
-        <button id="minimizePanel" style="margin-right: 4px;">–</button>
-        <button id="maximizePanel" style="margin-right: 4px; display: none;">⬜</button>
-        <button onclick="document.getElementById('batchGraderPanel').remove()">×</button>
+    <div style="position: sticky; top: 0; background: white; z-index: 1000; padding-bottom: 4px; border-bottom: 1px solid #ccc;">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h3 style="margin: 0;">Batch Grading Tool</h3>
+        <div>
+          <button id="approveAll" style="margin-right: 6px;">✅ Approve All</button>
+<button id="regrade" style="margin-right: 6px;">🔄 Regrade</button>
+          <button id="startPosting" style="margin-top: 12px; padding: 6px 12px;">🚀 Post All Approved</button>
+          <button id="minimizePanel" style="margin-right: 4px;">–</button>
+          <button id="maximizePanel" style="margin-right: 4px; display: none;">⬜</button>
+          <button onclick="document.getElementById('batchGraderPanel').remove()">×</button>
+        </div>
+      </div>
+      <div style="margin-top: 4px; font-size: 0.85em;">
+        Word Count Range: 
+        <input id="minWords" type="number" value="100" style="width: 60px;"> – 
+        <input id="maxWords" type="number" value="165" style="width: 60px;">
       </div>
     </div>
-   </div>
     <div id="batchStatus" style="margin: 10px 0;">Loading student data...</div>
     <div id="studentQueue"></div>
-    <div style="margin-top:10px; font-size: 0.75em; color: #999">Version: v2.40</div>
+    <div style="margin-top:10px; font-size: 0.75em; color: #999">Version: v2.41</div>
   `;
-
+  
   // Dragging logic
   let isDragging = false, offsetX = 0, offsetY = 0;
   panel.addEventListener('mousedown', function (e) {
@@ -77,6 +82,14 @@
     const approveAll = document.getElementById("approveAll");
 
     if (minimize && maximize && batchStatus && studentQueue && startPosting) {
+      const regrade = document.getElementById("regrade");
+      if (regrade) {
+        regrade.onclick = () => {
+          gradingQueue.length = 0;
+          localStorage.removeItem("canvasBatchQueue");
+          buildGradingQueue();
+        };
+      }
       minimize.onclick = () => {
         batchStatus.style.display = "none";
         studentQueue.style.display = "none";
@@ -260,6 +273,8 @@ approveAll.onclick = () => {
   }
 
   async function buildGradingQueue() {
+    const minWords = Math.max(50, parseInt(document.getElementById("minWords")?.value || "100"));
+    const maxWords = Math.min(300, parseInt(document.getElementById("maxWords")?.value || "165"));
     try {
       const url = window.location.href;
       const courseMatch = url.match(/courses\/(\d+)/);
@@ -294,7 +309,7 @@ approveAll.onclick = () => {
 
         let score = 10;
         const deductions = [];
-        if (wc < 100 || wc > 165) {
+        if (wc < minWords || wc > maxWords) {
           score -= 2;
           deductions.push("Initial post word count not within range (-2)");
         }
@@ -364,7 +379,7 @@ approveAll.onclick = () => {
         }
 
         const comment = [
-          wc < 100 || wc > 165 ? `Your initial post was ${wc} words, which is outside the expected 100–150 word range. ` : "",
+          wc < minWords || wc > maxWords ? `Your initial post was ${wc} words, which is outside the expected ${minWords}–${maxWords} word range. ` : "",
           posts.length < 2 ? "Only one post was submitted, which impacts participation. " : "",
           late ? "The initial post was made after the deadline. " : "",
           feedbackLine,
