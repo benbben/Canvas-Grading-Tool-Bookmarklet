@@ -1,14 +1,16 @@
 // grading-batch-poster.js
 // Full UI + Batch Approval + Auto Posting System for SpeedGrader
-// Version: v2.41 (Apr 22, 2025)
+
 
 (function () {
   localStorage.removeItem("canvasBatchQueue");
 
+  const version = "v2.42"; // (May 17, 2025)
+
   const existing = document.getElementById("batchGraderPanel");
   if (existing) existing.remove();
-  console.log("[BatchPoster v2.41] Initializing grading tool...");
-
+  console.log(`[BatchPoster ${version}] Initializing grading tool...`);
+  
   const panel = document.createElement("div");
   panel.id = "batchGraderPanel";
   panel.style = `
@@ -45,12 +47,12 @@
       <div style="margin-top: 4px; font-size: 0.85em;">
         Word Count Range: 
         <input id="minWords" type="number" value="100" style="width: 60px;"> – 
-        <input id="maxWords" type="number" value="165" style="width: 60px;">
+        <input id="maxWords" type="number" value="150" style="width: 60px;">
       </div>
     </div>
     <div id="batchStatus" style="margin: 10px 0;">Loading student data...</div>
     <div id="studentQueue"></div>
-    <div style="margin-top:10px; font-size: 0.75em; color: #999">Version: v2.41</div>
+    <div style="margin-top:10px; font-size: 0.75em; color: #999">Version: <script>document.write(version);</script></div>
   `;
   
   // Dragging logic
@@ -274,7 +276,7 @@ approveAll.onclick = () => {
 
   async function buildGradingQueue() {
     const minWords = parseInt(document.getElementById("minWords")?.value || "100");
-    const maxWords = parseInt(document.getElementById("maxWords")?.value || "165");
+    const maxWords = parseInt(document.getElementById("maxWords")?.value || "150");
     try {
       const url = window.location.href;
       const courseMatch = url.match(/courses\/(\d+)/);
