@@ -5,7 +5,7 @@
 (function () {
   localStorage.removeItem("canvasBatchQueue");
 
-  const version = "v2.43"; // (Jun 15, 2025)
+  const version = "v2.44"; // (Jun 15, 2025)
 
   const existing = document.getElementById("batchGraderPanel");
   if (existing) existing.remove();
@@ -217,7 +217,7 @@ await new Promise(resolve => setTimeout(resolve, 750));
 
   }
 //  await new Promise(resolve => setTimeout(resolve, 2000));
-await new Promise(resolve => setTimeout(resolve, 300)); // slight delay to let Canvas process submission
+await new Promise(resolve => setTimeout(resolve, 1000)); // increased wait to allow Canvas to finalize comment
 
   document.querySelector("i.icon-arrow-right.next")?.click();
 //  await new Promise(resolve => setTimeout(resolve, 2000));
