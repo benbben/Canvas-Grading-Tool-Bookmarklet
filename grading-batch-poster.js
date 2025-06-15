@@ -210,11 +210,11 @@ await waitForElement('#comment_submit_button');
   if (submitButton) {
     submitButton.style.boxShadow = '0 0 6px 3px #FF9800';
     submitButton.focus();
-    setTimeout(() => {
-      submitButton.click();
-      submitButton.blur();
-      submitButton.style.boxShadow = '';
-    }, 300);
+submitButton.click();
+submitButton.blur();
+submitButton.style.boxShadow = '';
+await new Promise(resolve => setTimeout(resolve, 750));
+
   }
 //  await new Promise(resolve => setTimeout(resolve, 2000));
 await new Promise(resolve => setTimeout(resolve, 300)); // slight delay to let Canvas process submission
