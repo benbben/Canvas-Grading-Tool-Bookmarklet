@@ -5,7 +5,7 @@
 (function () {
   localStorage.removeItem("canvasBatchQueue");
 
-  const version = "v2.42"; // (May 17, 2025)
+  const version = "v2.43"; // (Jun 15, 2025)
 
   const existing = document.getElementById("batchGraderPanel");
   if (existing) existing.remove();
@@ -73,6 +73,39 @@
     isDragging = false;
     panel.style.cursor = 'move';
   });
+// Utility to wait until a DOM element appears
+function waitForElement(selector, timeout = 5000) {
+  return new Promise((resolve, reject) => {
+    const start = Date.now();
+    const interval = setInterval(() => {
+      if (document.querySelector(selector)) {
+        clearInterval(interval);
+        resolve();
+      } else if (Date.now() - start > timeout) {
+        clearInterval(interval);
+        reject(new Error(`Timeout waiting for ${selector}`));
+      }
+    }, 100);
+  });
+}
+
+// Utility to wait until the student page changes
+function waitForNewStudent(prevId, timeout = 5000) {
+  return new Promise((resolve, reject) => {
+    const start = Date.now();
+    const interval = setInterval(() => {
+      const match = window.location.href.match(/student_id=(\d+)/);
+      const currentId = match ? match[1] : null;
+      if (currentId && currentId !== prevId) {
+        clearInterval(interval);
+        resolve();
+      } else if (Date.now() - start > timeout) {
+        clearInterval(interval);
+        reject(new Error(`Timeout waiting for new student page`));
+      }
+    }, 100);
+  });
+}
 
   // DOM element binding fix using setTimeout
   setTimeout(() => {
@@ -131,7 +164,9 @@ while (true) {
   if (!student) {
     console.log(`[BatchPoster] No approved entry for student ${currentId}. Skipping...`);
     document.querySelector("i.icon-arrow-right.next")?.click();
-    await new Promise(resolve => setTimeout(resolve, 2000));
+//    await new Promise(resolve => setTimeout(resolve, 2000));
+    await waitForElement('#grading-box-extended');
+
     continue;
   }
 
@@ -151,7 +186,8 @@ while (true) {
     gradeBox.dispatchEvent(new Event("change", { bubbles: true }));
     gradeBox.blur();
   }
-  await new Promise(resolve => setTimeout(resolve, 2000));
+//  await new Promise(resolve => setTimeout(resolve, 2000));
+await waitForElement('iframe#speedgrader_iframe');
 
   const iframe = Array.from(document.querySelectorAll("iframe")).find(f =>
     f.contentDocument?.body?.id === "tinymce"
@@ -167,7 +203,8 @@ while (true) {
       setTimeout(() => body.blur(), 100);
     }
   }
-  await new Promise(resolve => setTimeout(resolve, 2000));
+//  await new Promise(resolve => setTimeout(resolve, 2000));
+await waitForElement('#comment_submit_button');
 
   const submitButton = document.getElementById("comment_submit_button");
   if (submitButton) {
@@ -179,10 +216,12 @@ while (true) {
       submitButton.style.boxShadow = '';
     }, 300);
   }
-  await new Promise(resolve => setTimeout(resolve, 2000));
+//  await new Promise(resolve => setTimeout(resolve, 2000));
+await new Promise(resolve => setTimeout(resolve, 300)); // slight delay to let Canvas process submission
 
   document.querySelector("i.icon-arrow-right.next")?.click();
-  await new Promise(resolve => setTimeout(resolve, 2000));
+//  await new Promise(resolve => setTimeout(resolve, 2000));
+await waitForNewStudent(currentId);
 
   // ✅ Only increment once we are done posting and moved forward
   postedStudentIds.add(student.id);
