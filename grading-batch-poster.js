@@ -5,7 +5,7 @@
 (function () {
   localStorage.removeItem("canvasBatchQueue");
 
-  const version = "v2.44"; // (Jun 15, 2025)
+  const version = "v2.45"; // (Oct 12, 2025)
 
   const existing = document.getElementById("batchGraderPanel");
   if (existing) existing.remove();
@@ -96,6 +96,12 @@ function waitForNewStudent(prevId, timeout = 5000) {
     const interval = setInterval(() => {
       const match = window.location.href.match(/student_id=(\d+)/);
       const currentId = match ? match[1] : null;
+      
+      if (postedStudentIds.has(currentId)) {
+          alert("🎉 All approved grades have been posted.");
+          break;
+      }
+      
       if (currentId && currentId !== prevId) {
         clearInterval(interval);
         resolve();
