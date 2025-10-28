@@ -5,7 +5,7 @@
 (function () {
   localStorage.removeItem("canvasBatchQueue");
 
-  const version = "v2.45"; // (Oct 12, 2025)
+  const version = "v2.46"; // (Oct 27, 2025)
 
   const existing = document.getElementById("batchGraderPanel");
   if (existing) existing.remove();
@@ -96,12 +96,7 @@ function waitForNewStudent(prevId, timeout = 5000) {
     const interval = setInterval(() => {
       const match = window.location.href.match(/student_id=(\d+)/);
       const currentId = match ? match[1] : null;
-      
-      if (postedStudentIds.has(currentId)) {
-          alert("🎉 All approved grades have been posted.");
-          break;
-      }
-      
+
       if (currentId && currentId !== prevId) {
         clearInterval(interval);
         resolve();
@@ -165,7 +160,12 @@ while (true) {
   const match = url.match(/student_id=(\d+)/);
   const currentId = match ? match[1] : null;
   if (!currentId) break;
-
+  
+  if (postedStudentIds.has(currentId)) {
+      alert("🎉 All approved grades have been posted.");
+      break;
+  }
+  
   const student = gradingQueue.find(s => String(s.id) === String(currentId) && s.approved);
   if (!student) {
     console.log(`[BatchPoster] No approved entry for student ${currentId}. Skipping...`);
