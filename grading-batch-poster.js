@@ -74,7 +74,7 @@
     panel.style.cursor = 'move';
   });
 // Utility to wait until a DOM element appears
-function waitForElement(selector, timeout = 5000) {
+function waitForElement(selector, timeout = 20000) {
   return new Promise((resolve, reject) => {
     const start = Date.now();
     const interval = setInterval(() => {
@@ -193,7 +193,7 @@ while (true) {
     gradeBox.blur();
   }
 //  await new Promise(resolve => setTimeout(resolve, 2000));
-await waitForElement('iframe#speedgrader_iframe');
+// await waitForElement('iframe#speedgrader_iframe');
 
   const iframe = Array.from(document.querySelectorAll("iframe")).find(f =>
     f.contentDocument?.body?.id === "tinymce"
