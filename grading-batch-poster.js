@@ -1,16 +1,15 @@
 // grading-batch-poster.js
 // Full UI + Batch Approval + Auto Posting System for SpeedGrader
 
-
 (function () {
   localStorage.removeItem("canvasBatchQueue");
 
-  const version = "v2.46"; // (Oct 27, 2025)
+  const version = "v2.47"; // (Jan 29, 2026)
 
   const existing = document.getElementById("batchGraderPanel");
   if (existing) existing.remove();
   console.log(`[BatchPoster ${version}] Initializing grading tool...`);
-  
+
   const panel = document.createElement("div");
   panel.id = "batchGraderPanel";
   panel.style = `
@@ -37,7 +36,7 @@
         <h3 style="margin: 0;">Batch Grading Tool</h3>
         <div>
           <button id="approveAll" style="margin-right: 6px;">✅ Approve All</button>
-<button id="regrade" style="margin-right: 6px;">🔄 Regrade</button>
+          <button id="regrade" style="margin-right: 6px;">🔄 Regrade</button>
           <button id="startPosting" style="margin-top: 12px; padding: 6px 12px;">🚀 Post All Approved</button>
           <button id="minimizePanel" style="margin-right: 4px;">–</button>
           <button id="maximizePanel" style="margin-right: 4px; display: none;">⬜</button>
@@ -54,59 +53,68 @@
     <div id="studentQueue"></div>
     <div style="margin-top:10px; font-size: 0.75em; color: #999">Version: <script>document.write(version);</script></div>
   `;
-  
+
   // Dragging logic
   let isDragging = false, offsetX = 0, offsetY = 0;
-  panel.addEventListener('mousedown', function (e) {
-    if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON') return;
+  panel.addEventListener("mousedown", function (e) {
+    if (e.target.tagName === "TEXTAREA" || e.target.tagName === "INPUT" || e.target.tagName === "BUTTON") return;
     isDragging = true;
     offsetX = e.clientX - panel.offsetLeft;
     offsetY = e.clientY - panel.offsetTop;
-    panel.style.cursor = 'grabbing';
+    panel.style.cursor = "grabbing";
   });
-  document.addEventListener('mousemove', function (e) {
+  document.addEventListener("mousemove", function (e) {
     if (!isDragging) return;
-    panel.style.left = (e.clientX - offsetX) + 'px';
-    panel.style.top = (e.clientY - offsetY) + 'px';
+    panel.style.left = (e.clientX - offsetX) + "px";
+    panel.style.top = (e.clientY - offsetY) + "px";
   });
-  document.addEventListener('mouseup', function () {
+  document.addEventListener("mouseup", function () {
     isDragging = false;
-    panel.style.cursor = 'move';
+    panel.style.cursor = "move";
   });
-// Utility to wait until a DOM element appears
-function waitForElement(selector, timeout = 5000) {
-  return new Promise((resolve, reject) => {
-    const start = Date.now();
-    const interval = setInterval(() => {
-      if (document.querySelector(selector)) {
-        clearInterval(interval);
-        resolve();
-      } else if (Date.now() - start > timeout) {
-        clearInterval(interval);
-        reject(new Error(`Timeout waiting for ${selector}`));
-      }
-    }, 100);
-  });
-}
 
-// Utility to wait until the student page changes
-function waitForNewStudent(prevId, timeout = 5000) {
-  return new Promise((resolve, reject) => {
-    const start = Date.now();
-    const interval = setInterval(() => {
-      const match = window.location.href.match(/student_id=(\d+)/);
-      const currentId = match ? match[1] : null;
+  // Utility to wait until a DOM element appears
+  function waitForElement(selector, timeout = 5000) {
+    return new Promise((resolve, reject) => {
+      const start = Date.now();
+      const interval = setInterval(() => {
+        if (document.querySelector(selector)) {
+          clearInterval(interval);
+          resolve();
+        } else if (Date.now() - start > timeout) {
+          clearInterval(interval);
+          reject(new Error(`Timeout waiting for ${selector}`));
+        }
+      }, 100);
+    });
+  }
 
-      if (currentId && currentId !== prevId) {
-        clearInterval(interval);
-        resolve();
-      } else if (Date.now() - start > timeout) {
-        clearInterval(interval);
-        reject(new Error(`Timeout waiting for new student page`));
-      }
-    }, 100);
-  });
-}
+  // Utility to wait until the student page changes
+  function waitForNewStudent(prevId, timeout = 5000) {
+    return new Promise((resolve, reject) => {
+      const start = Date.now();
+      const interval = setInterval(() => {
+        const match = window.location.href.match(/student_id=(\d+)/);
+        const currentId = match ? match[1] : null;
+
+        if (currentId && currentId !== prevId) {
+          clearInterval(interval);
+          resolve();
+        } else if (Date.now() - start > timeout) {
+          clearInterval(interval);
+          reject(new Error("Timeout waiting for new student page"));
+        }
+      }, 100);
+    });
+  }
+
+  // State store for student data
+  const gradingQueue = [];
+  const userCache = {};
+  const userNameMap = {};
+  const studentIds = new Set();
+  const postedStudentIds = new Set();
+  let currentStudentIndex = 0;
 
   // DOM element binding fix using setTimeout
   setTimeout(() => {
@@ -126,6 +134,7 @@ function waitForNewStudent(prevId, timeout = 5000) {
           buildGradingQueue();
         };
       }
+
       minimize.onclick = () => {
         batchStatus.style.display = "none";
         studentQueue.style.display = "none";
@@ -144,129 +153,121 @@ function waitForNewStudent(prevId, timeout = 5000) {
         panel.style.height = "600px";
       };
 
-startPosting.onclick = async () => {
-  const total = gradingQueue.length;
-  const approved = gradingQueue.filter(s => s.approved).length;
-  if (approved < total) {
-    const confirmProceed = confirm(`Only ${approved} of ${total} students are approved. Do you want to continue?`);
-    if (!confirmProceed) return;
-  }
+      startPosting.onclick = async () => {
+        const total = gradingQueue.length;
+        const approved = gradingQueue.filter(s => s.approved).length;
+        if (approved < total) {
+          const confirmProceed = confirm(`Only ${approved} of ${total} students are approved. Do you want to continue?`);
+          if (!confirmProceed) return;
+        }
 
-  // Minimize UI for visibility
-  document.getElementById('minimizePanel')?.click();
+        document.getElementById("minimizePanel")?.click();
 
-while (true) {
-  const url = window.location.href;
-  const match = url.match(/student_id=(\d+)/);
-  const currentId = match ? match[1] : null;
-  if (!currentId) break;
-  
-  if (postedStudentIds.has(currentId)) {
-      alert("🎉 All approved grades have been posted.");
-      break;
-  }
-  
-  const student = gradingQueue.find(s => String(s.id) === String(currentId) && s.approved);
-  if (!student) {
-    console.log(`[BatchPoster] No approved entry for student ${currentId}. Skipping...`);
-    document.querySelector("i.icon-arrow-right.next")?.click();
-//    await new Promise(resolve => setTimeout(resolve, 2000));
-    await waitForElement('#grading-box-extended');
+        while (true) {
+          const url = window.location.href;
+          const match = url.match(/student_id=(\d+)/);
+          const currentId = match ? match[1] : null;
+          if (!currentId) break;
 
-    continue;
-  }
+          if (postedStudentIds.has(String(currentId))) {
+            alert("🎉 All approved grades have been posted.");
+            break;
+          }
 
-  console.log(`[BatchPoster] Posting for ${student.name} (ID ${student.id})`);
+          const student = gradingQueue.find(s => String(s.id) === String(currentId) && s.approved);
+          if (!student) {
+            console.log(`[BatchPoster] No approved entry for student ${currentId}. Skipping...`);
+            document.querySelector('button[data-testid="next-student-button"]')?.click();
+            await waitForNewStudent(currentId);
+            await waitForElement('input[data-testid="grade-input"]');
+            continue;
+          }
 
-  const gradeBox = document.getElementById("grading-box-extended");
-  if (gradeBox) {
-    gradeBox.style.boxShadow = '0 0 6px 3px #4CAF50';
-    setTimeout(() => gradeBox.style.boxShadow = '', 2000);
-    gradeBox.focus();
-    gradeBox.value = '';
-    const chars = String(student.score).split('');
-    chars.forEach(char => {
-      gradeBox.value += char;
-      gradeBox.dispatchEvent(new Event("input", { bubbles: true }));
-    });
-    gradeBox.dispatchEvent(new Event("change", { bubbles: true }));
-    gradeBox.blur();
-  }
-//  await new Promise(resolve => setTimeout(resolve, 2000));
-await waitForElement('iframe#speedgrader_iframe');
+          console.log(`[BatchPoster] Posting for ${student.name} (ID ${student.id})`);
 
-  const iframe = Array.from(document.querySelectorAll("iframe")).find(f =>
-    f.contentDocument?.body?.id === "tinymce"
-  );
-  if (iframe) {
-    const doc = iframe.contentDocument || iframe.contentWindow.document;
-    const body = doc.querySelector("body#tinymce");
-    if (body) {
-      body.style.boxShadow = '0 0 6px 3px #2196F3';
-      setTimeout(() => body.style.boxShadow = '', 2000);
-      body.innerHTML = `<p>${student.comment}</p>`;
-      body.focus();
-      setTimeout(() => body.blur(), 100);
-    }
-  }
-//  await new Promise(resolve => setTimeout(resolve, 2000));
-await waitForElement('#comment_submit_button');
+          // Grade input (new Canvas selector)
+          await waitForElement('input[data-testid="grade-input"]');
+          const gradeBox = document.querySelector('input[data-testid="grade-input"]');
+          if (gradeBox) {
+            gradeBox.style.boxShadow = "0 0 6px 3px #4CAF50";
+            setTimeout(() => gradeBox.style.boxShadow = "", 2000);
+            gradeBox.focus();
+            gradeBox.value = "";
+            gradeBox.dispatchEvent(new Event("input", { bubbles: true }));
 
-  const submitButton = document.getElementById("comment_submit_button");
-  if (submitButton) {
-    submitButton.style.boxShadow = '0 0 6px 3px #FF9800';
-    submitButton.focus();
-submitButton.click();
-submitButton.blur();
-submitButton.style.boxShadow = '';
-await new Promise(resolve => setTimeout(resolve, 750));
+            String(student.score).split("").forEach(char => {
+              gradeBox.value += char;
+              gradeBox.dispatchEvent(new Event("input", { bubbles: true }));
+            });
 
-  }
-//  await new Promise(resolve => setTimeout(resolve, 2000));
-await new Promise(resolve => setTimeout(resolve, 1000)); // increased wait to allow Canvas to finalize comment
+            gradeBox.dispatchEvent(new Event("change", { bubbles: true }));
+            gradeBox.blur();
+          }
 
-  document.querySelector("i.icon-arrow-right.next")?.click();
-//  await new Promise(resolve => setTimeout(resolve, 2000));
-await waitForNewStudent(currentId);
+          // Comment editor (new RCE iframe under #rce)
+          await waitForElement("#rce iframe");
+          const rceIframe = document.querySelector("#rce iframe");
+          if (rceIframe) {
+            const doc = rceIframe.contentDocument || rceIframe.contentWindow?.document;
+            const body = doc?.body;
+            if (body) {
+              body.style.boxShadow = "0 0 6px 3px #2196F3";
+              setTimeout(() => body.style.boxShadow = "", 2000);
+              body.innerHTML = `<p>${student.comment}</p>`;
+              body.focus();
+              body.dispatchEvent(new Event("input", { bubbles: true }));
+              setTimeout(() => body.blur(), 100);
+            }
+          }
 
-  // ✅ Only increment once we are done posting and moved forward
-  postedStudentIds.add(student.id);
-  if (postedStudentIds.size >= approved) {
-    alert("🎉 All approved grades have been posted.");
-    break;
-  }
-}
+          // Submit comment
+          await waitForElement("#comment_submit_button");
+          const submitButton = document.getElementById("comment_submit_button");
+          if (submitButton) {
+            submitButton.style.boxShadow = "0 0 6px 3px #FF9800";
+            submitButton.focus();
+            submitButton.click();
+            submitButton.blur();
+            submitButton.style.boxShadow = "";
+            await new Promise(resolve => setTimeout(resolve, 750));
+          }
 
+          await new Promise(resolve => setTimeout(resolve, 1000));
 
-  alert("🎉 Posting complete!");
-  localStorage.removeItem("canvasBatchQueue");
-  gradingQueue.length = 0;
-  renderQueue();
-};
-approveAll.onclick = () => {
-  gradingQueue.forEach((s, i) => {
-    s.approved = true;
-    const scoreInput = document.getElementById(`score-${i}`);
-    const commentInput = document.getElementById(`comment-${i}`);
-    if (scoreInput && commentInput) {
-      s.score = parseFloat(scoreInput.value);
-      s.comment = commentInput.value;
-    }
-  });
-  localStorage.setItem("canvasBatchQueue", JSON.stringify(gradingQueue));
-  renderQueue();
-};
+          // Mark posted, then navigate next (new Canvas selector)
+          postedStudentIds.add(String(student.id));
 
+          if (postedStudentIds.size >= approved) {
+            alert("🎉 All approved grades have been posted.");
+            break;
+          }
+
+          document.querySelector('button[data-testid="next-student-button"]')?.click();
+          await waitForNewStudent(currentId);
+          await waitForElement('input[data-testid="grade-input"]');
+        }
+
+        alert("🎉 Posting complete!");
+        localStorage.removeItem("canvasBatchQueue");
+        gradingQueue.length = 0;
+        renderQueue();
+      };
+
+      approveAll.onclick = () => {
+        gradingQueue.forEach((s, i) => {
+          s.approved = true;
+          const scoreInput = document.getElementById(`score-${i}`);
+          const commentInput = document.getElementById(`comment-${i}`);
+          if (scoreInput && commentInput) {
+            s.score = parseFloat(scoreInput.value);
+            s.comment = commentInput.value;
+          }
+        });
+        localStorage.setItem("canvasBatchQueue", JSON.stringify(gradingQueue));
+        renderQueue();
+      };
     }
   }, 0);
-
-  // State store for student data
-  const gradingQueue = [];
-  const userCache = {};
-  const userNameMap = {};
-  const studentIds = new Set();
-  const postedStudentIds = new Set();
-  let currentStudentIndex = 0;
 
   function flattenPosts(posts) {
     let flat = [];
@@ -283,13 +284,13 @@ approveAll.onclick = () => {
   function countWordsSmart(text) {
     if (!text) return 0;
     const plainText = text
-      .replace(/<[^>]*>/g, '')
+      .replace(/<[^>]*>/g, "")
       .replace(/[‘’“”]/g, "'")
-      .replace(/[-']/g, '')
-      .replace(/[^\w\s]/g, '')
-      .replace(/\s+/g, ' ')
+      .replace(/[-']/g, "")
+      .replace(/[^\w\s]/g, "")
+      .replace(/\s+/g, " ")
       .trim();
-    return plainText ? plainText.split(' ').length : 0;
+    return plainText ? plainText.split(" ").length : 0;
   }
 
   async function fetchJSON(url) {
@@ -308,15 +309,14 @@ approveAll.onclick = () => {
           break;
         }
         users.forEach(u => {
-        studentIds.add(u.id);
-        userNameMap[u.id] = u.sortable_name || u.name || `User ${u.id}`;
-      });
+          studentIds.add(u.id);
+          userNameMap[u.id] = u.sortable_name || u.name || `User ${u.id}`;
+        });
         page++;
       }
     } catch (err) {
       console.warn("Failed to fetch course users:", err);
     }
-
   }
 
   async function buildGradingQueue() {
@@ -372,15 +372,15 @@ approveAll.onclick = () => {
 
         const premiumPraise = [
           "Excellent contribution! You nailed it.",
-          "Fantastic work – well articulated and insightful.",
+          "Fantastic work, well articulated and insightful.",
           "Nice job engaging with the topic and your peers.",
-          "Thoughtful and clear – really well done.",
-          "You clearly understood the material – great job.",
+          "Thoughtful and clear, really well done.",
+          "You clearly understood the material, great job.",
           "This was a polished and well-thought-out post.",
-          "Really effective communication in this post – well done!",
-          "Well-expressed and appropriately detailed – excellent work.",
+          "Really effective communication in this post, well done!",
+          "Well-expressed and appropriately detailed, excellent work.",
           "Your response was both accurate and engaging.",
-          "A strong and well-written entry – keep it up!"
+          "A strong and well-written entry, keep it up!"
         ];
 
         const strongPraise = [
@@ -389,34 +389,33 @@ approveAll.onclick = () => {
           "Terrific job staying within the guidelines and delivering quality input.",
           "Solid contribution, both timely and relevant.",
           "You did a great job applying the concepts here.",
-          "Strong submission – your perspective was clear and compelling.",
+          "Strong submission, your perspective was clear and compelling.",
           "Nice balance of detail and relevance in your response.",
           "Excellent depth and clarity in your writing.",
-          "Your participation stood out – great work!",
+          "Your participation stood out, great work!",
           "This post demonstrated maturity and strong comprehension."
         ];
 
         const encouragingPraise = [
           "Good work! You're close to full credit.",
-          "Nice post – just a few small things to tighten up.",
+          "Nice post, just a few small things to tighten up.",
           "You’re on the right track with this submission.",
-          "Good effort – you demonstrated understanding of the topic.",
-          "Well done overall – keep building on this foundation."
+          "Good effort, you demonstrated understanding of the topic.",
+          "Well done overall, keep building on this foundation."
         ];
 
         const encouragementOnly = [
-          "You're making progress – keep pushing forward.",
-          "Appreciate your effort – a bit more polish next time.",
-          "Don’t get discouraged – improvement is part of the process.",
-          "You’re almost there – keep participating actively.",
-          "Thanks for engaging – looking forward to your next post!"
+          "You're making progress, keep pushing forward.",
+          "Appreciate your effort, a bit more polish next time.",
+          "Don’t get discouraged, improvement is part of the process.",
+          "You’re almost there, keep participating actively.",
+          "Thanks for engaging, looking forward to your next post!"
         ];
 
-        let feedbackLine = '';
+        let feedbackLine = "";
         if (posts.length >= 3) {
-        feedbackLine = premiumPraise[Math.floor(Math.random() * premiumPraise.length)];
-        }
-        else if (score >= 8) {
+          feedbackLine = premiumPraise[Math.floor(Math.random() * premiumPraise.length)];
+        } else if (score >= 8) {
           feedbackLine =
             score === 10 ? premiumPraise[Math.floor(Math.random() * premiumPraise.length)] :
             score === 9 ? strongPraise[Math.floor(Math.random() * strongPraise.length)] :
@@ -449,11 +448,9 @@ approveAll.onclick = () => {
       document.getElementById("batchStatus").innerText = `Loaded ${gradingQueue.length} students.`;
       renderQueue();
     } catch (err) {
-  const statusEl = document.getElementById("batchStatus");
-  if (statusEl) statusEl.innerText = `❌ ${err.message}`;
-}
-
-
+      const statusEl = document.getElementById("batchStatus");
+      if (statusEl) statusEl.innerText = `❌ ${err.message}`;
+    }
   }
 
   const renderQueue = () => {
@@ -483,12 +480,12 @@ approveAll.onclick = () => {
           </div>
         ` : ""}
         <div style="margin-top: 6px;">
-          <textarea id="comment-${i}" rows="2" style="width:100%;" ${s.approved ? 'disabled' : ''}>${s.comment}</textarea>
+          <textarea id="comment-${i}" rows="2" style="width:100%;" ${s.approved ? "disabled" : ""}>${s.comment}</textarea>
         </div>
         <div style="margin-top: 6px; display: flex; align-items: center; gap: 10px;">
-          Score: <input type="number" value="${s.score}" id="score-${i}" style="width: 40px;" ${s.approved ? 'disabled' : ''}>
+          Score: <input type="number" value="${s.score}" id="score-${i}" style="width: 40px;" ${s.approved ? "disabled" : ""}>
           ${s.approved ? `<button onclick="editStudent(${i})">✏️ Edit</button>` : `<button onclick="approveStudent(${i})">✅ Approve</button>`}
-          <span id="approved-${i}" style="color: green; display: ${s.approved ? 'inline' : 'none'};">Approved</span>
+          <span id="approved-${i}" style="color: green; display: ${s.approved ? "inline" : "none"};">Approved</span>
         </div>
       </div>
     `).join("");
